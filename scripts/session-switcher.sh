@@ -4,25 +4,14 @@
 # ============================================================================
 # Interactive session switcher similar to Zellij's session management
 
-# Get list of sessions
-sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
-
-if [ -z "$sessions" ]; then
-    tmux display-message "No sessions available"
+# Check if tmux-fzf is available (preferred method)
+if [ -f ~/.tmux/plugins/tmux-fzf/scripts/session.sh ]; then
+    # Use tmux-fzf if available (works better in tmux context)
+    ~/.tmux/plugins/tmux-fzf/scripts/session.sh
     exit 0
 fi
 
-# Use fzf if available, otherwise use basic selection
-if command -v fzf >/dev/null 2>&1; then
-    selected=$(echo "$sessions" | fzf --height 40% --reverse --border)
-else
-    # Fallback to tmux choose-session
-    tmux choose-session
-    exit 0
-fi
-
-# Switch to selected session
-if [ -n "$selected" ]; then
-    tmux switch-client -t "$selected"
-fi
+# Fallback: Use tmux's built-in choose-session
+# This works reliably in tmux context
+tmux choose-session
 

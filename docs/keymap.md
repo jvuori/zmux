@@ -102,11 +102,19 @@ Zellij uses direct key combinations (no prefix needed):
 
 ## Session Mode (`Ctrl+o`)
 
-| Key      | Action              |
-| -------- | ------------------- |
-| `d`      | Detach from session |
-| `Ctrl+s` | Enter scroll mode   |
-| `Ctrl+o` | Exit session mode   |
+| Key      | Action                                  |
+| -------- | --------------------------------------- |
+| `n`      | Create new session (prompts for name)   |
+| `r`      | Rename current session                  |
+| `w`      | Session manager (tmux-fzf session list) |
+| `d`      | Detach from session                     |
+| `c`      | Show configuration info                 |
+| `p`      | Show plugin info                        |
+| `a`      | Show about info                         |
+| `s`      | Share (not available in tmux)           |
+| `q`      | Sequence (not available in tmux)        |
+| `Ctrl+s` | Enter scroll mode                       |
+| `Ctrl+o` | Exit session mode                       |
 
 ## Shared Keybindings
 
@@ -149,6 +157,21 @@ These are zmux-specific utilities:
 | ---------- | ------------------------------ |
 | `Ctrl+g R` | Reload configuration           |
 | `Ctrl+g S` | Session switcher (interactive) |
+
+## Plugin Keybindings
+
+### tmux-resurrect
+
+- `Ctrl+g Ctrl+s` - Save session state
+- `Ctrl+g Ctrl+r` - Restore session state
+
+### tmux-fzf (if installed)
+
+- `Ctrl+g s` - Interactive session switcher
+- `Ctrl+g w` - Interactive window switcher
+- `Ctrl+g p` - Interactive pane switcher
+
+Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+g S`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
 
 ## Tips
 

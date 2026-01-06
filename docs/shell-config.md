@@ -55,6 +55,7 @@ if [ -n "$TMUX" ]; then
     bind '"\C-n": ""'
     bind '"\C-h": ""'
     bind '"\C-g": ""'
+    bind '"\C-o": ""'
     # Use Alt+Arrow for history instead
     bind '"\e[A": history-search-backward'
     bind '"\e[B": history-search-forward'
@@ -70,6 +71,7 @@ if [ -n "$TMUX" ]; then
     bindkey -r '^N'
     bindkey -r '^H'
     bindkey -r '^G'
+    bindkey -r '^O'
     # Use Alt+Arrow for history instead
     bindkey '^[[A' history-search-backward
     bindkey '^[[B' history-search-forward

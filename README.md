@@ -37,6 +37,21 @@ If you have an old tmux configuration and the install script didn't update it:
 
 This will backup your old config and create a symlink to zmux.
 
+### Update Installation
+
+To update an existing zmux installation with the latest configuration:
+
+```bash
+./update.sh
+```
+
+This will:
+
+- Backup your current configuration
+- Update all configuration files
+- Reload the config in active tmux sessions
+- Guide you through plugin updates
+
 ### Reload Configuration
 
 After installing or updating zmux, reload the configuration in active tmux sessions:
@@ -88,7 +103,7 @@ zmux uses Zellij's default keybindings - direct key combinations (no prefix need
 - **Move mode**: `Ctrl+h` - Move/reorder panes
 - **Tab mode**: `Ctrl+t` - Manage tabs/windows
 - **Scroll mode**: `Ctrl+s` - Scroll and copy mode
-- **Session mode**: `Ctrl+o` - Session management
+- **Session mode**: `Ctrl+o` - Session management (create, switch, detach)
 
 ### Quick Actions
 
@@ -145,9 +160,23 @@ After making changes, reload the config with `Ctrl+g R`.
 
 zmux includes the following plugins (installed via TPM):
 
+### Core & Session Experience
+
 - **tmux-sensible** - Sensible defaults
-- **tmux-resurrect** - Save/restore sessions
-- **tmux-continuum** - Auto-save sessions
+- **tmux-resurrect** - Save/restore sessions (prefix + Ctrl+s save, prefix + Ctrl+r restore)
+- **tmux-continuum** - Auto-save sessions (autosave every 15 minutes, auto-restore on start)
+
+### Discoverability & UX Guidance
+
+- **tmux-which-key** - Keybinding hints (shows available keys after prefix)
+- **tmux-prefix-highlight** - Prefix indicator (shows in status bar when prefix is active)
+
+### Sessions, Windows & Navigation
+
+- **tmux-fzf** - Interactive session/window/pane switcher (fzf-based UI)
+
+### Additional Useful Plugins
+
 - **tmux-yank** - Better clipboard integration
 - **tmux-open** - Open files/URLs
 - **tmux-copycat** - Enhanced search
@@ -155,11 +184,21 @@ zmux includes the following plugins (installed via TPM):
 
 ### Installing Plugins
 
-After installation, press `Ctrl+g`, then `I` to install all plugins.
+After installation or update, install plugins:
 
-### Updating Plugins
+**In tmux:**
 
-Press `Ctrl+g`, then `U` to update plugins.
+- Press `Ctrl+g`, then `I` to install all plugins
+- Press `Ctrl+g`, then `U` to update existing plugins
+
+**From command line:**
+
+```bash
+tmux run '~/.tmux/plugins/tpm/bin/install_plugins'
+tmux run '~/.tmux/plugins/tpm/bin/update_plugins' all
+```
+
+**Note:** After running `update.sh`, you need to install any new plugins that were added to the configuration.
 
 ## Uninstallation
 

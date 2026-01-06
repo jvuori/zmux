@@ -45,6 +45,8 @@ if [ -n "$TMUX" ]; then
     bind '"\C-h": ""'
     # Disable Ctrl+g (abort) - zmux uses it for lock mode
     bind '"\C-g": ""'
+    # Disable Ctrl+o (operate) - zmux uses it for session mode
+    bind '"\C-o": ""'
     # Use Alt+Arrow for history instead
     bind '"\e[A": history-search-backward'
     bind '"\e[B": history-search-forward'
@@ -65,6 +67,8 @@ if [ -n "$TMUX" ]; then
     bindkey -r '^H'
     # Disable Ctrl+g (abort) - zmux uses it for lock mode
     bindkey -r '^G'
+    # Disable Ctrl+o (operate) - zmux uses it for session mode
+    bindkey -r '^O'
     # Use Alt+Arrow for history instead
     bindkey '^[[A' history-search-backward
     bindkey '^[[B' history-search-forward

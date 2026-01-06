@@ -2,6 +2,7 @@
 # tmux-start.sh - Smart tmux session starter
 # If sessions exist, attach to the last active one
 # If no sessions exist, create a new one named "default"
+# Note: tmux-continuum will auto-restore sessions on tmux server start
 
 # Check if we're already in a tmux session
 if [ -n "$TMUX" ]; then
@@ -9,6 +10,13 @@ if [ -n "$TMUX" ]; then
     exec tmux "$@"
     exit $?
 fi
+
+# Start tmux server (continuum will auto-restore if configured)
+# This ensures continuum restore happens before we check for sessions
+tmux start-server 2>/dev/null || true
+
+# Wait a moment for continuum restore to complete (if it's restoring)
+sleep 0.5
 
 # Check if there are any existing sessions
 EXISTING_SESSIONS=$(tmux list-sessions 2>/dev/null)

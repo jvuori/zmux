@@ -21,25 +21,25 @@ Zellij uses direct key combinations (no prefix needed):
 
 ## Pane Mode (`Ctrl+p`)
 
-| Key      | Action                                        |
-| -------- | --------------------------------------------- |
-| `h` `←`  | Move focus left                               |
-| `l` `→`  | Move focus right                              |
-| `j` `↓`  | Move focus down                               |
-| `k` `↑`  | Move focus up                                 |
-| `p`      | Switch focus (toggle between panes)           |
-| `n`      | Create new pane (full)                        |
-| `d`      | Create new pane down                          |
-| `r`      | Create new pane right                         |
-| `s`      | Create new pane stacked                       |
-| `x`      | Close focused pane                            |
-| `f`      | Toggle fullscreen                             |
-| `z`      | Toggle pane frames                            |
-| `w`      | Toggle floating panes (not available in tmux) |
-| `e`      | Toggle embed/floating (not available in tmux) |
-| `c`      | Rename pane                                   |
-| `i`      | Toggle pane pinned (not available in tmux)    |
-| `Ctrl+p` | Exit pane mode                                |
+| Key      | Action                                                        |
+| -------- | ------------------------------------------------------------- |
+| `h` `←`  | Move focus left                                               |
+| `l` `→`  | Move focus right                                              |
+| `j` `↓`  | Move focus down                                               |
+| `k` `↑`  | Move focus up                                                 |
+| `p`      | Switch focus (toggle between panes)                           |
+| `n`      | Create new pane (smart: horizontal if wide, vertical if tall) |
+| `d`      | Create new pane down                                          |
+| `r`      | Create new pane right                                         |
+| `s`      | Create new pane stacked                                       |
+| `x`      | Close focused pane                                            |
+| `f`      | Toggle fullscreen                                             |
+| `z`      | Toggle pane frames                                            |
+| `w`      | Toggle floating panes (not available in tmux)                 |
+| `e`      | Toggle embed/floating (not available in tmux)                 |
+| `c`      | Rename pane                                                   |
+| `i`      | Toggle pane pinned (not available in tmux)                    |
+| `Ctrl+p` | Exit pane mode                                                |
 
 ## Resize Mode (`Ctrl+n`)
 

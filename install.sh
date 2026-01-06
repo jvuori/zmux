@@ -172,8 +172,101 @@ fi
 
 echo ""
 echo "📦 Installing tmux plugins..."
-echo "   (This will be done automatically when you start tmux)"
-echo "   Or run: tmux source-file ~/.tmux.conf && tmux run '~/.tmux/plugins/tpm/bin/install_plugins'"
+
+# Check if fzf is installed (required for tmux-fzf)
+if ! command -v fzf >/dev/null 2>&1; then
+    echo "⚠️  fzf is required for tmux-fzf plugin. Installing..."
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get install -y fzf 2>/dev/null || {
+            echo "❌ Could not install fzf automatically. Please install it manually:"
+            echo "   sudo apt-get install fzf"
+            echo "   Or visit: https://github.com/junegunn/fzf#installation"
+        }
+    elif command -v brew >/dev/null 2>&1; then
+        brew install fzf 2>/dev/null || {
+            echo "❌ Could not install fzf automatically. Please install it manually:"
+            echo "   brew install fzf"
+        }
+    else
+        echo "❌ Please install fzf manually:"
+        echo "   Visit: https://github.com/junegunn/fzf#installation"
+    fi
+fi
+
+# Start tmux server if not running (needed for plugin installation)
+if ! tmux has-session 2>/dev/null; then
+    echo "   Starting tmux server for plugin installation..."
+    tmux start-server 2>/dev/null || true
+    sleep 1
+fi
+
+# Install plugins using TPM
+if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
+    echo "   Installing plugins via TPM..."
+    
+    # Source config first to ensure TPM is loaded
+    tmux source-file ~/.tmux.conf 2>/dev/null || true
+    sleep 1
+    
+    # Run install_plugins directly (TPM can be run outside tmux for installation)
+    # Retry up to 3 times if download fails
+    INSTALL_SUCCESS=false
+    for attempt in 1 2 3; do
+        if [ $attempt -gt 1 ]; then
+            echo "   Retry attempt $attempt..."
+            sleep 2
+        fi
+        
+        if bash "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" 2>&1; then
+            INSTALL_SUCCESS=true
+            break
+        fi
+        
+        # Check if critical plugins were installed despite errors
+        if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
+            INSTALL_SUCCESS=true
+            break
+        fi
+    done
+    
+    # Wait a moment for any async operations
+    sleep 2
+    
+    # Verify critical plugin (tmux-fzf) is installed
+    if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
+        echo "✅ Plugins installed successfully"
+    else
+        echo "⚠️  Plugin installation failed. Attempting manual installation..."
+        # Try to manually clone critical plugins if TPM failed (network issues, etc.)
+        if [ ! -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
+            echo "   Manually installing tmux-fzf (sainnhe/tmux-fzf)..."
+            if git clone https://github.com/sainnhe/tmux-fzf.git "$TMUX_PLUGINS_DIR/tmux-fzf" 2>/dev/null; then
+                echo "   ✅ tmux-fzf installed"
+            else
+                echo "   ❌ Failed to install tmux-fzf (network issue?)"
+            fi
+        fi
+        if [ ! -d "$TMUX_PLUGINS_DIR/tmux-which-key" ]; then
+            echo "   Manually installing tmux-which-key..."
+            if git clone https://github.com/tmux-plugins/tmux-which-key.git "$TMUX_PLUGINS_DIR/tmux-which-key" 2>/dev/null; then
+                echo "   ✅ tmux-which-key installed"
+            else
+                echo "   ❌ Failed to install tmux-which-key (network issue?)"
+            fi
+        fi
+        
+        # Final check
+        if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
+            echo "✅ Critical plugins installed"
+        else
+            echo "❌ Plugin installation failed. Please install manually when network is available:"
+            echo "   In tmux, press Ctrl+g, then I"
+            echo "   Or run: bash ~/.tmux/plugins/tpm/bin/install_plugins"
+        fi
+    fi
+else
+    echo "⚠️  TPM not found. Plugins will be installed when you start tmux."
+fi
 
 # ============================================================================
 # Step 7: Shell Configuration (Important!)
@@ -204,18 +297,11 @@ fi
 # ============================================================================
 
 echo ""
-echo "🔍 Checking optional dependencies..."
+echo "🔍 Verifying dependencies..."
 
 if ! command -v fzf >/dev/null 2>&1; then
-    echo "ℹ️  fzf is not installed (optional, for enhanced session switching)"
-    echo "   Install with:"
-    if command -v apt-get >/dev/null 2>&1; then
-        echo "   sudo apt-get install fzf"
-    elif command -v brew >/dev/null 2>&1; then
-        echo "   brew install fzf"
-    else
-        echo "   Visit: https://github.com/junegunn/fzf#installation"
-    fi
+    echo "⚠️  fzf is not installed (required for tmux-fzf)"
+    echo "   Please install it manually if automatic installation failed"
 else
     echo "✅ fzf is installed"
 fi
@@ -234,7 +320,7 @@ echo "   3. Or restart tmux: exit and run 'tmux' again"
 echo ""
 echo "Next steps:"
 echo "  1. Reload config in existing sessions (see above) or start new tmux: tmux"
-echo "  2. Install plugins: Press Ctrl+g, then I (or your old prefix if not reloaded)"
+echo "  2. Plugins should be installed automatically (if installation failed, press Ctrl+g, then I)"
 echo "  3. Verify installation: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "Key bindings (after reload):"

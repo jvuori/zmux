@@ -58,8 +58,12 @@ cp "$SCRIPT_DIR/tmux/modes/move.conf" "$TMUX_CONFIG_DIR/modes/move.conf"
 # Copy scripts
 cp "$SCRIPT_DIR/scripts/session-switcher.sh" "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 cp "$SCRIPT_DIR/scripts/doctor.sh" "$TMUX_CONFIG_DIR/scripts/doctor.sh"
+cp "$SCRIPT_DIR/scripts/tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+cp "$SCRIPT_DIR/scripts/show-help.sh" "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 
 echo "✅ Configuration files updated"
 
@@ -85,16 +89,35 @@ fi
 # ============================================================================
 
 echo ""
-echo "📦 Plugin updates..."
-echo ""
-echo "To install/update plugins:"
-echo "  1. Start or attach to a tmux session"
-echo "  2. Press Ctrl+g, then I (to install new plugins)"
-echo "  3. Press Ctrl+g, then U (to update existing plugins)"
-echo ""
-echo "Or run from command line:"
-echo "  tmux run '~/.tmux/plugins/tpm/bin/install_plugins'"
-echo "  tmux run '~/.tmux/plugins/tpm/bin/update_plugins' all"
+echo "📦 Updating plugins..."
+
+# Start tmux server if not running (needed for plugin installation)
+if ! tmux has-session 2>/dev/null; then
+    echo "   Starting tmux server for plugin update..."
+    tmux start-server 2>/dev/null || true
+    sleep 1
+fi
+
+# Install/update plugins using TPM
+if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
+    echo "   Installing new plugins..."
+    tmux source-file ~/.tmux.conf 2>/dev/null || true
+    tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || {
+        echo "⚠️  Could not install plugins automatically. Please install manually:"
+        echo "   In tmux, press Ctrl+g, then I"
+    }
+    
+    echo "   Updating existing plugins..."
+    # Use bash -c to properly execute the command with arguments
+    tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || {
+        echo "⚠️  Could not update plugins automatically. Please update manually:"
+        echo "   In tmux, press Ctrl+g, then U"
+    }
+    echo "✅ Plugins updated"
+else
+    echo "⚠️  TPM not found. Please install plugins manually:"
+    echo "   In tmux, press Ctrl+g, then I"
+fi
 
 # ============================================================================
 # Update complete

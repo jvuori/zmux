@@ -23,9 +23,44 @@ cd zmux
 
 ### First Run
 
-1. Start tmux: `tmux`
+1. Start tmux: `tmux` (or use `~/.config/tmux/scripts/tmux-start.sh` for automatic session restoration)
 2. Install plugins: Press `Ctrl+g`, then `I` (this uses tmux prefix for plugin installation)
 3. Reload config: Press `Ctrl+g`, then `R` (custom binding)
+
+### Automatic Session Restoration
+
+zmux includes a smart session starter that:
+
+- **Restores the last active session** if sessions exist
+- **Creates a new "default" session** if no sessions exist
+
+To use it, you can either:
+
+**Option 1: Use the script directly**
+
+```bash
+~/.config/tmux/scripts/tmux-start.sh
+```
+
+**Option 2: Create an alias (recommended)**
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias tmux='~/.config/tmux/scripts/tmux-start.sh'
+```
+
+**Option 3: Create a function (allows passing arguments)**
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+tmux() {
+    if [ "$#" -eq 0 ]; then
+        ~/.config/tmux/scripts/tmux-start.sh "$@"
+    else
+        command tmux "$@"
+    fi
+}
+```
 
 ### Fix Existing Installation
 

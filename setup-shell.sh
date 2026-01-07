@@ -11,16 +11,45 @@ SHELL_CONFIG=""
 SHELL_NAME=""
 ZMUX_SHELL_CONFIG="$HOME/.config/zmux/shell-config"
 
-# Detect shell
-if [ -n "$ZSH_VERSION" ]; then
-    SHELL_NAME="zsh"
-    SHELL_CONFIG="$HOME/.zshrc"
-elif [ -n "$BASH_VERSION" ]; then
-    SHELL_NAME="bash"
-    SHELL_CONFIG="$HOME/.bashrc"
-else
-    echo "❌ Unsupported shell. Please configure manually (see docs/shell-config.md)"
-    exit 1
+# Detect shell - prefer user's default shell, fall back to current shell
+# Check user's default shell first (from $SHELL environment variable)
+if [ -n "$SHELL" ]; then
+    case "$SHELL" in
+        *zsh*)
+            SHELL_NAME="zsh"
+            SHELL_CONFIG="$HOME/.zshrc"
+            ;;
+        *bash*)
+            SHELL_NAME="bash"
+            SHELL_CONFIG="$HOME/.bashrc"
+            ;;
+        *)
+            # Fall through to check current shell
+            ;;
+    esac
+fi
+
+# If not detected from $SHELL, check current shell environment
+if [ -z "$SHELL_NAME" ]; then
+    if [ -n "$ZSH_VERSION" ]; then
+        SHELL_NAME="zsh"
+        SHELL_CONFIG="$HOME/.zshrc"
+    elif [ -n "$BASH_VERSION" ]; then
+        SHELL_NAME="bash"
+        SHELL_CONFIG="$HOME/.bashrc"
+    else
+        # Last resort: check which config file exists
+        if [ -f "$HOME/.zshrc" ] && [ ! -f "$HOME/.bashrc" ]; then
+            SHELL_NAME="zsh"
+            SHELL_CONFIG="$HOME/.zshrc"
+        elif [ -f "$HOME/.bashrc" ]; then
+            SHELL_NAME="bash"
+            SHELL_CONFIG="$HOME/.bashrc"
+        else
+            echo "❌ Could not detect shell. Please configure manually (see docs/shell-config.md)"
+            exit 1
+        fi
+    fi
 fi
 
 echo "🔧 Setting up $SHELL_NAME configuration for zmux..."

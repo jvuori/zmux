@@ -2,6 +2,8 @@
 
 **zmux** is a tmux configuration that makes tmux behave as closely as possible to [Zellij](https://zellij.dev/), providing a modern, modal terminal multiplexer experience.
 
+![zmux demo session](screenshot.png)
+
 ## Features
 
 - 🎯 **Zellij-like keybindings**: Modal interface with Pane, Tab, Resize, Move, and Scroll modes

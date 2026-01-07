@@ -20,6 +20,8 @@ cat > "$HELP_FILE" <<'HELP'
 │   Ctrl+q       Quit (kill all sessions)                                      │
 │   Ctrl+a r     Reload configuration                                          │
 │   Ctrl+a s     Session switcher                                              │
+│   Ctrl+a i     Install plugins                                               │
+│   Ctrl+a u     Update plugins                                                │
 │   Ctrl+a ?     Show this help                                                │
 │                                                                              │
 │ Pane Mode (Ctrl+p)                                                           │

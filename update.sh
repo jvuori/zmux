@@ -104,14 +104,14 @@ if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
     tmux source-file ~/.tmux.conf 2>/dev/null || true
     tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || {
         echo "⚠️  Could not install plugins automatically. Please install manually:"
-        echo "   In tmux, press Ctrl+a, then I"
+        echo "   In tmux, press Ctrl+a, then i"
     }
     
     echo "   Updating existing plugins..."
     # Use bash -c to properly execute the command with arguments
     tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || {
         echo "⚠️  Could not update plugins automatically. Please update manually:"
-        echo "   In tmux, press Ctrl+a, then U"
+        echo "   In tmux, press Ctrl+a, then u"
     }
     echo "✅ Plugins updated"
 else
@@ -128,7 +128,7 @@ echo "🎉 Update complete!"
 echo ""
 echo "Next steps:"
 echo "  1. If you have active tmux sessions, the config is already reloaded"
-echo "  2. Install/update plugins: Press Ctrl+a, then I (or U for updates)"
+echo "  2. Install/update plugins: Press Ctrl+a, then i (or u for updates)"
 echo "  3. Verify: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "If you encounter issues, your backup is at:"

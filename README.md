@@ -18,7 +18,7 @@
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/zmux.git
+git clone https://github.com/jvuori/zmux.git
 cd zmux
 ./install.sh
 ```
@@ -26,8 +26,8 @@ cd zmux
 ### First Run
 
 1. Start tmux: `tmux` (or use `~/.config/tmux/scripts/tmux-start.sh` for automatic session restoration)
-2. Install plugins: Press `Ctrl+a`, then `I` (this uses tmux prefix for plugin installation)
-3. Reload config: Press `Ctrl+a`, then `R` (custom binding)
+2. Install plugins: Press `Ctrl+a`, then `i` (this uses tmux prefix for plugin installation)
+3. Reload config: Press `Ctrl+a`, then `r` (custom binding)
 
 ### Automatic Session Restoration
 
@@ -145,8 +145,8 @@ zmux uses Zellij's default keybindings - direct key combinations (no prefix need
 ### Quick Actions
 
 - **Quit**: `Ctrl+q` - Kill all sessions
-- **Reload config**: `Ctrl+a R` (custom, not in Zellij)
-- **Session switcher**: `Ctrl+a S` (custom, not in Zellij)
+- **Reload config**: `Ctrl+a r` (custom, not in Zellij)
+- **Session switcher**: `Ctrl+a s` (custom, not in Zellij)
 
 See [docs/keymap.md](docs/keymap.md) for the complete keymap reference.
 
@@ -191,7 +191,7 @@ You can customize zmux by editing files in `~/.config/tmux/`:
 - `sessions.conf` - Session management settings
 - `modes/*.conf` - Mode-specific configurations
 
-After making changes, reload the config with `Ctrl+a R`.
+After making changes, reload the config with `Ctrl+a r`.
 
 ## Plugins
 
@@ -225,8 +225,8 @@ After installation or update, install plugins:
 
 **In tmux:**
 
-- Press `Ctrl+a`, then `I` to install all plugins
-- Press `Ctrl+a`, then `U` to update existing plugins
+- Press `Ctrl+a`, then `i` to install all plugins
+- Press `Ctrl+a`, then `u` to update existing plugins
 
 **From command line:**
 
@@ -333,22 +333,26 @@ If you ran `install.sh` but your old tmux configuration is still active:
 
 1. Make sure TPM is installed: `ls ~/.tmux/plugins/tpm`
 2. If missing, run: `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
-3. In tmux, press `Ctrl+a`, then `I`
+3. In tmux, press `Ctrl+a`, then `i`
 
 ### Keybindings not working
 
 1. Check if config is loaded: `tmux show-options -g | grep prefix`
-2. Reload config: `Ctrl+a R`
+2. Reload config: `Ctrl+a r`
 3. Verify installation: `~/.config/tmux/scripts/doctor.sh`
 
 ### Status bar not showing
 
 1. Check status bar is enabled: `tmux show-options -g status`
-2. Reload config: `Ctrl+a R`
+2. Reload config: `Ctrl+a r`
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
+
+- **Repository**: [https://github.com/jvuori/zmux](https://github.com/jvuori/zmux)
+- **Issues**: [https://github.com/jvuori/zmux/issues](https://github.com/jvuori/zmux/issues)
+- **Pull Requests**: [https://github.com/jvuori/zmux/pulls](https://github.com/jvuori/zmux/pulls)
 
 ## License
 

@@ -260,7 +260,7 @@ if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
             echo "✅ Critical plugins installed"
         else
             echo "❌ Plugin installation failed. Please install manually when network is available:"
-            echo "   In tmux, press Ctrl+a, then I"
+            echo "   In tmux, press Ctrl+a, then i"
             echo "   Or run: bash ~/.tmux/plugins/tpm/bin/install_plugins"
         fi
     fi
@@ -320,7 +320,7 @@ echo "   3. Or restart tmux: exit and run 'tmux' again"
 echo ""
 echo "Next steps:"
 echo "  1. Reload config in existing sessions (see above) or start new tmux: tmux"
-echo "  2. Plugins should be installed automatically (if installation failed, press Ctrl+a, then I)"
+echo "  2. Plugins should be installed automatically (if installation failed, press Ctrl+a, then i)"
 echo "  3. Verify installation: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "Key bindings (after reload):"

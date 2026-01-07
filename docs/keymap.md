@@ -155,8 +155,8 @@ These are zmux-specific utilities:
 
 | Key        | Action                         |
 | ---------- | ------------------------------ |
-| `Ctrl+a R` | Reload configuration           |
-| `Ctrl+a S` | Session switcher (interactive) |
+| `Ctrl+a r` | Reload configuration           |
+| `Ctrl+a s` | Session switcher (interactive) |
 
 ## Plugin Keybindings
 
@@ -170,8 +170,10 @@ These are zmux-specific utilities:
 - `Ctrl+a s` - Interactive session switcher
 - `Ctrl+a w` - Interactive window switcher
 - `Ctrl+a p` - Interactive pane switcher
+- `Ctrl+a i` - Install plugins (TPM)
+- `Ctrl+a u` - Update plugins (TPM)
 
-Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+a S`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
+Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+a s`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
 
 ## Tips
 
@@ -179,7 +181,7 @@ Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+a 
 2. **Mode-based workflow**: Enter a mode with `Ctrl+key`, perform actions, then exit with the same `Ctrl+key` or `Escape`
 3. **Arrow keys work**: Arrow keys work in most modes for navigation/resizing
 4. **Consistent navigation**: hjkl and arrow keys work consistently across modes
-5. **Session switching**: Use `Ctrl+a S` for interactive session selection (requires fzf for best experience)
+5. **Session switching**: Use `Ctrl+a s` for interactive session selection (requires fzf for best experience)
 
 ## Differences from Standard tmux
 

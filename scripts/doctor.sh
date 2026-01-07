@@ -49,7 +49,7 @@ if [ -d "$HOME/.tmux/plugins/tpm" ]; then
     PLUGIN_COUNT=$(find "$HOME/.tmux/plugins" -mindepth 1 -maxdepth 1 -type d | wc -l)
     if [ "$PLUGIN_COUNT" -lt 2 ]; then
         echo "⚠️  WARNING: Plugins may not be installed"
-        echo "   Run: prefix+I in tmux to install plugins"
+        echo "   Run: prefix+i in tmux to install plugins"
         WARNINGS=$((WARNINGS + 1))
     else
         echo "✅ Plugins directory exists ($PLUGIN_COUNT plugins found)"

@@ -9,7 +9,7 @@ When you're typing in a shell inside tmux, the shell's readline library intercep
 - `Ctrl+n` - Next command (readline)
 - `Ctrl+h` - Backspace (readline)
 - `Ctrl+s` - Flow control (terminal)
-- `Ctrl+g` - Abort (readline)
+- `Ctrl+a` - Beginning of line (readline)
 
 ## Solutions
 
@@ -54,7 +54,7 @@ if [ -n "$TMUX" ]; then
     bind '"\C-p": ""'
     bind '"\C-n": ""'
     bind '"\C-h": ""'
-    bind '"\C-g": ""'
+    bind '"\C-a": ""'
     bind '"\C-o": ""'
     # Use Alt+Arrow for history instead
     bind '"\e[A": history-search-backward'
@@ -70,7 +70,7 @@ if [ -n "$TMUX" ]; then
     bindkey -r '^P'
     bindkey -r '^N'
     bindkey -r '^H'
-    bindkey -r '^G'
+    bindkey -r '^A'
     bindkey -r '^O'
     # Use Alt+Arrow for history instead
     bindkey '^[[A' history-search-backward
@@ -89,7 +89,7 @@ bind -n C-Space switch-client -T pane
 
 ### Option 3: Use Prefix Mode (Traditional tmux)
 
-If you prefer the traditional tmux approach, you can use prefix mode instead of direct keybindings. This requires pressing a prefix key first (like `Ctrl+g`), then the mode key.
+If you prefer the traditional tmux approach, you can use prefix mode instead of direct keybindings. This requires pressing a prefix key first (like `Ctrl+a`), then the mode key.
 
 ## Verification
 
@@ -107,7 +107,7 @@ After configuring your shell:
 3. **Test the keybindings:**
    - `Ctrl+p` should enter pane mode (not show previous command)
    - `Ctrl+n` should enter resize mode (not show next command)
-   - `Ctrl+g` should lock/unlock (not abort)
+   - `Ctrl+a` should lock/unlock (not beginning of line)
 
 ## Alternative: Use Escape Sequences
 

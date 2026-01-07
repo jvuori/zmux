@@ -24,8 +24,8 @@ cd zmux
 ### First Run
 
 1. Start tmux: `tmux` (or use `~/.config/tmux/scripts/tmux-start.sh` for automatic session restoration)
-2. Install plugins: Press `Ctrl+g`, then `I` (this uses tmux prefix for plugin installation)
-3. Reload config: Press `Ctrl+g`, then `R` (custom binding)
+2. Install plugins: Press `Ctrl+a`, then `I` (this uses tmux prefix for plugin installation)
+3. Reload config: Press `Ctrl+a`, then `R` (custom binding)
 
 ### Automatic Session Restoration
 
@@ -99,7 +99,7 @@ Or manually in tmux: press prefix, then type `:source-file ~/.tmux.conf`
 
 ### Shell Configuration (Required!)
 
-zmux uses `Ctrl+p`, `Ctrl+n`, `Ctrl+h`, and `Ctrl+g` which conflict with shell readline shortcuts. You **must** configure your shell:
+zmux uses `Ctrl+p`, `Ctrl+n`, `Ctrl+h`, and `Ctrl+a` which conflict with shell readline shortcuts. You **must** configure your shell:
 
 ```bash
 ./setup-shell.sh
@@ -129,7 +129,7 @@ zmux uses Zellij's default keybindings - direct key combinations (no prefix need
 
 ### Lock Key
 
-- **Lock/Unlock**: `Ctrl+g` - Locks the session
+- **Lock/Unlock**: `Ctrl+a` - Locks the session
 
 ### Modes
 
@@ -143,8 +143,8 @@ zmux uses Zellij's default keybindings - direct key combinations (no prefix need
 ### Quick Actions
 
 - **Quit**: `Ctrl+q` - Kill all sessions
-- **Reload config**: `Ctrl+g R` (custom, not in Zellij)
-- **Session switcher**: `Ctrl+g S` (custom, not in Zellij)
+- **Reload config**: `Ctrl+a R` (custom, not in Zellij)
+- **Session switcher**: `Ctrl+a S` (custom, not in Zellij)
 
 See [docs/keymap.md](docs/keymap.md) for the complete keymap reference.
 
@@ -189,7 +189,7 @@ You can customize zmux by editing files in `~/.config/tmux/`:
 - `sessions.conf` - Session management settings
 - `modes/*.conf` - Mode-specific configurations
 
-After making changes, reload the config with `Ctrl+g R`.
+After making changes, reload the config with `Ctrl+a R`.
 
 ## Plugins
 
@@ -223,8 +223,8 @@ After installation or update, install plugins:
 
 **In tmux:**
 
-- Press `Ctrl+g`, then `I` to install all plugins
-- Press `Ctrl+g`, then `U` to update existing plugins
+- Press `Ctrl+a`, then `I` to install all plugins
+- Press `Ctrl+a`, then `U` to update existing plugins
 
 **From command line:**
 
@@ -325,24 +325,24 @@ If you ran `install.sh` but your old tmux configuration is still active:
 4. **Verify it's working:**
    - Press `Ctrl+p` (should enter pane mode)
    - Press `Ctrl+n` (should enter resize mode)
-   - Check prefix: `tmux show-options -g prefix` (should show `C-g`)
+   - Check prefix: `tmux show-options -g prefix` (should show `C-a`)
 
 ### Plugins not installing
 
 1. Make sure TPM is installed: `ls ~/.tmux/plugins/tpm`
 2. If missing, run: `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
-3. In tmux, press `Ctrl+g`, then `I`
+3. In tmux, press `Ctrl+a`, then `I`
 
 ### Keybindings not working
 
 1. Check if config is loaded: `tmux show-options -g | grep prefix`
-2. Reload config: `Ctrl+g R`
+2. Reload config: `Ctrl+a R`
 3. Verify installation: `~/.config/tmux/scripts/doctor.sh`
 
 ### Status bar not showing
 
 1. Check status bar is enabled: `tmux show-options -g status`
-2. Reload config: `Ctrl+g R`
+2. Reload config: `Ctrl+a R`
 
 ## Contributing
 

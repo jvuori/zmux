@@ -111,6 +111,6 @@ echo ""
 echo "✅ Uninstallation complete!"
 echo ""
 echo "Note: If you have active tmux sessions, you may want to:"
-echo "  - Detach from sessions: prefix+d (or Ctrl+g, then d)"
+echo "  - Detach from sessions: prefix+d (or Ctrl+a, then d)"
 echo "  - Kill all sessions: tmux kill-server"
 

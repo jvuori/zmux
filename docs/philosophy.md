@@ -20,8 +20,8 @@ zmux bridges this gap by providing Zellij's user experience on tmux's foundation
 Zellij uses modes (Pane, Tab, Resize, Move, Scroll) to organize functionality. zmux replicates this with tmux's key tables, making the experience feel natural and organized.
 
 ### 2. Intuitive Keybindings
-- **Prefix**: `Ctrl+g` (Zellij's default)
-- **Modes**: Activate with prefix + mode key (e.g., `Ctrl+g g` for pane mode)
+- **Prefix**: `Ctrl+a` (quicker to type)
+- **Modes**: Activate with prefix + mode key (e.g., `Ctrl+a p` for pane mode)
 - **Navigation**: Arrow keys and vim-style hjkl work consistently
 
 ### 3. Modern Aesthetics
@@ -44,7 +44,7 @@ zmux uses essential tmux plugins to enhance functionality:
 ## Key Differences from Standard tmux
 
 1. **Modal Keybindings**: Instead of prefix + key combinations, zmux uses modes
-2. **Default Prefix**: Changed from `Ctrl+b` to `Ctrl+g`
+2. **Default Prefix**: Changed from `Ctrl+b` to `Ctrl+a`
 3. **Status Bar**: Modern, minimal design at the top
 4. **Pane Management**: More intuitive splitting and navigation
 5. **Tab Management**: Windows are treated as tabs (Zellij-style)

@@ -81,5 +81,5 @@ echo ""
 echo "After both steps, test with:"
 echo "  - Press Ctrl+p (should enter pane mode, not show previous command)"
 echo "  - Press Ctrl+n (should enter resize mode)"
-echo "  - Press Ctrl+g twice (should lock/unlock)"
+echo "  - Press Ctrl+a twice (should lock/unlock)"
 

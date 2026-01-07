@@ -16,11 +16,11 @@ cat > "$HELP_FILE" <<'HELP'
 │   Ctrl+o  Session mode   - Session management                                │
 │                                                                              │
 │ Quick Actions                                                                │
-│   Ctrl+g       Lock/Unlock session                                           │
+│   Ctrl+a       Lock/Unlock session                                           │
 │   Ctrl+q       Quit (kill all sessions)                                      │
-│   Ctrl+g r     Reload configuration                                          │
-│   Ctrl+g s     Session switcher                                              │
-│   Ctrl+g ?     Show this help                                                │
+│   Ctrl+a r     Reload configuration                                          │
+│   Ctrl+a s     Session switcher                                              │
+│   Ctrl+a ?     Show this help                                                │
 │                                                                              │
 │ Pane Mode (Ctrl+p)                                                           │
 │   h/←    Move left          l/→    Move right                                │

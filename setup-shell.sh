@@ -43,8 +43,8 @@ if [ -n "$TMUX" ]; then
     bind '"\C-n": ""'
     # Disable Ctrl+h (backspace) - zmux uses it for move mode
     bind '"\C-h": ""'
-    # Disable Ctrl+g (abort) - zmux uses it for lock mode
-    bind '"\C-g": ""'
+    # Disable Ctrl+a (beginning of line) - zmux uses it for lock mode
+    bind '"\C-a": ""'
     # Disable Ctrl+o (operate) - zmux uses it for session mode
     bind '"\C-o": ""'
     # Use Alt+Arrow for history instead
@@ -65,8 +65,8 @@ if [ -n "$TMUX" ]; then
     bindkey -r '^N'
     # Disable Ctrl+h (backspace) - zmux uses it for move mode
     bindkey -r '^H'
-    # Disable Ctrl+g (abort) - zmux uses it for lock mode
-    bindkey -r '^G'
+    # Disable Ctrl+a (beginning of line) - zmux uses it for lock mode
+    bindkey -r '^A'
     # Disable Ctrl+o (operate) - zmux uses it for session mode
     bindkey -r '^O'
     # Use Alt+Arrow for history instead

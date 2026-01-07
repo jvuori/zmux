@@ -4,7 +4,7 @@ This keymap matches Zellij's default keybindings as closely as possible.
 
 ## Lock Key
 
-- **Lock/Unlock**: `Ctrl+g` - Locks the session (like Zellij's locked mode)
+- **Lock/Unlock**: `Ctrl+a` - Locks the session (like Zellij's locked mode)
 
 ## Mode Activation
 
@@ -122,7 +122,7 @@ These work in all modes (except locked):
 
 | Key             | Action                   |
 | --------------- | ------------------------ |
-| `Ctrl+g`        | Lock session             |
+| `Ctrl+a`        | Lock session             |
 | `Ctrl+q`        | Quit (kill all sessions) |
 | `Alt+f`         | Toggle pane frames       |
 | `Alt+n`         | Create new pane          |
@@ -155,23 +155,23 @@ These are zmux-specific utilities:
 
 | Key        | Action                         |
 | ---------- | ------------------------------ |
-| `Ctrl+g R` | Reload configuration           |
-| `Ctrl+g S` | Session switcher (interactive) |
+| `Ctrl+a R` | Reload configuration           |
+| `Ctrl+a S` | Session switcher (interactive) |
 
 ## Plugin Keybindings
 
 ### tmux-resurrect
 
-- `Ctrl+g Ctrl+s` - Save session state
-- `Ctrl+g Ctrl+r` - Restore session state
+- `Ctrl+a Ctrl+s` - Save session state
+- `Ctrl+a Ctrl+r` - Restore session state
 
 ### tmux-fzf (if installed)
 
-- `Ctrl+g s` - Interactive session switcher
-- `Ctrl+g w` - Interactive window switcher
-- `Ctrl+g p` - Interactive pane switcher
+- `Ctrl+a s` - Interactive session switcher
+- `Ctrl+a w` - Interactive window switcher
+- `Ctrl+a p` - Interactive pane switcher
 
-Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+g S`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
+Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+a S`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
 
 ## Tips
 
@@ -179,7 +179,7 @@ Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+g 
 2. **Mode-based workflow**: Enter a mode with `Ctrl+key`, perform actions, then exit with the same `Ctrl+key` or `Escape`
 3. **Arrow keys work**: Arrow keys work in most modes for navigation/resizing
 4. **Consistent navigation**: hjkl and arrow keys work consistently across modes
-5. **Session switching**: Use `Ctrl+g S` for interactive session selection (requires fzf for best experience)
+5. **Session switching**: Use `Ctrl+a S` for interactive session selection (requires fzf for best experience)
 
 ## Differences from Standard tmux
 

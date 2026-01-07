@@ -58,8 +58,30 @@ HELP
 # Check if tmux popup is available (tmux 3.2+)
 if tmux display-popup -h >/dev/null 2>&1; then
     # Use popup for better display
-    tmux display-popup -w 80 -h 30 -E "less -R '$HELP_FILE'; rm -f '$HELP_FILE'"
+    # Note: Esc key handling in tmux popups can be unreliable
+    # We'll use less which has better terminal handling
+    # Create a wrapper script that handles input properly
+    WRAPPER=$(mktemp)
+    cat > "$WRAPPER" <<'WRAPPER_SCRIPT'
+#!/bin/bash
+cat "$1"
+# Configure terminal for character-by-character input
+exec < /dev/tty
+old_stty=$(stty -g 2>/dev/null)
+stty raw -echo cbreak 2>/dev/null
+# Read and check for q or Esc
+while true; do
+    char=$(dd bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')
+    case "$char" in
+        113|81) break ;;  # q or Q
+        27) break ;;      # Esc
+    esac
+done
+stty "$old_stty" 2>/dev/null
+WRAPPER_SCRIPT
+    chmod +x "$WRAPPER"
+    tmux display-popup -w 80 -h 30 -E "$WRAPPER '$HELP_FILE'; rm -f '$HELP_FILE' '$WRAPPER'"
 else
-    # Fallback: display in a new window
+    # Fallback: display in a new window with less (supports q, Esc may work)
     tmux new-window -n "zmux-help" "less -R '$HELP_FILE'; rm -f '$HELP_FILE'"
 fi

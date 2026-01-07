@@ -57,22 +57,33 @@ elif [ "$SHELL_NAME" = "zsh" ]; then
 # zmux shell configuration
 # Disable readline shortcuts that conflict with zmux when inside tmux
 # To disable, comment out or remove the source line from your ~/.zshrc
+# This configuration is compatible with Powerlevel10k instant prompt and Starship
 
-if [ -n "$TMUX" ]; then
-    # Disable Ctrl+p (previous command) - zmux uses it for pane mode
-    bindkey -r '^P'
-    # Disable Ctrl+n (next command) - zmux uses it for resize mode
-    bindkey -r '^N'
-    # Disable Ctrl+h (backspace) - zmux uses it for move mode
-    bindkey -r '^H'
-    # Disable Ctrl+a (beginning of line) - zmux uses it for lock mode
-    bindkey -r '^A'
-    # Disable Ctrl+o (operate) - zmux uses it for session mode
-    bindkey -r '^O'
-    # Use Alt+Arrow for history instead
-    bindkey '^[[A' history-search-backward
-    bindkey '^[[B' history-search-forward
-fi
+# Function to configure zmux keybindings silently
+# This avoids console output during zsh initialization (Powerlevel10k compatibility)
+_zmux_configure_keys() {
+    if [ -n "$TMUX" ]; then
+        # Suppress all output from bindkey commands to avoid Powerlevel10k warnings
+        {
+            # Disable Ctrl+p (previous command) - zmux uses it for pane mode
+            bindkey -r '^P'
+            # Disable Ctrl+n (next command) - zmux uses it for resize mode
+            bindkey -r '^N'
+            # Disable Ctrl+h (backspace) - zmux uses it for move mode
+            bindkey -r '^H'
+            # Disable Ctrl+a (beginning of line) - zmux uses it for lock mode
+            bindkey -r '^A'
+            # Disable Ctrl+o (operate) - zmux uses it for session mode
+            bindkey -r '^O'
+            # Use Alt+Arrow for history instead
+            bindkey '^[[A' history-search-backward
+            bindkey '^[[B' history-search-forward
+        } >/dev/null 2>&1
+    fi
+}
+
+# Configure keys - function call is silent and produces no console output
+_zmux_configure_keys
 EOF
 fi
 

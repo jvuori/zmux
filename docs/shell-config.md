@@ -62,20 +62,25 @@ if [ -n "$TMUX" ]; then
 fi
 ```
 
-**For Zsh:**
+**For Zsh (Powerlevel10k compatible):**
 ```zsh
 # Disable readline shortcuts that conflict with zmux
 # Only disable when inside tmux
-if [ -n "$TMUX" ]; then
-    bindkey -r '^P'
-    bindkey -r '^N'
-    bindkey -r '^H'
-    bindkey -r '^A'
-    bindkey -r '^O'
-    # Use Alt+Arrow for history instead
-    bindkey '^[[A' history-search-backward
-    bindkey '^[[B' history-search-forward
-fi
+# This version is compatible with Powerlevel10k instant prompt
+_zmux_configure_keys() {
+    if [ -n "$TMUX" ]; then
+        {
+            bindkey -r '^P'
+            bindkey -r '^N'
+            bindkey -r '^H'
+            bindkey -r '^A'
+            bindkey -r '^O'
+            bindkey '^[[A' history-search-backward
+            bindkey '^[[B' history-search-forward
+        } >/dev/null 2>&1
+    fi
+}
+_zmux_configure_keys
 ```
 
 ### Option 2: Use Alternative Keys
@@ -113,9 +118,58 @@ After configuring your shell:
 
 Some terminals support escape sequences that work better. You can configure tmux to use these, but it requires terminal-specific configuration.
 
+## Prompt Compatibility (Powerlevel10k & Starship)
+
+### Powerlevel10k
+
+If you're using Powerlevel10k with instant prompt, you may see warnings about console output during zsh initialization when opening new panes. This has been fixed in the automatic setup script.
+
+Powerlevel10k's instant prompt feature requires **no console output** during shell initialization, which is why the configuration uses silent `bindkey` commands.
+
+### Starship
+
+Starship doesn't have the same strict requirements as Powerlevel10k's instant prompt. It doesn't implement an instant prompt feature, so it won't show warnings about console output during initialization.
+
+However, the silent configuration we use is still **compatible with Starship** and is considered good practice. Suppressing output during shell initialization helps keep your shell startup clean and fast, regardless of which prompt you use.
+
+**If you're seeing the warning:**
+
+1. **Re-run the setup script** (recommended):
+   ```bash
+   ./setup-shell.sh
+   ```
+   This will update your `~/.config/zmux/shell-config` file with a Powerlevel10k-compatible version.
+
+2. **Or manually update** your `~/.config/zmux/shell-config` file to use the silent configuration:
+   ```zsh
+   # zmux shell configuration (Powerlevel10k compatible)
+   _zmux_configure_keys() {
+       if [ -n "$TMUX" ]; then
+           {
+               bindkey -r '^P'
+               bindkey -r '^N'
+               bindkey -r '^H'
+               bindkey -r '^A'
+               bindkey -r '^O'
+               bindkey '^[[A' history-search-backward
+               bindkey '^[[B' history-search-forward
+           } >/dev/null 2>&1
+       fi
+   }
+   _zmux_configure_keys
+   ```
+
+3. **Reload your shell configuration:**
+   ```bash
+   source ~/.zshrc
+   ```
+
+The fix ensures all `bindkey` commands run silently, preventing any console output during zsh initialization that would trigger Powerlevel10k's instant prompt warning.
+
 ## Notes
 
 - These changes only apply when you're inside a tmux session (`$TMUX` is set)
 - Outside tmux, your normal shell shortcuts will still work
 - You can still use `Alt+Arrow` or `Up/Down` arrows for command history
+- The configuration is compatible with Powerlevel10k instant prompt and Starship
 

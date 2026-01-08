@@ -248,10 +248,21 @@ if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
         fi
         if [ ! -d "$TMUX_PLUGINS_DIR/tmux-which-key" ]; then
             echo "   Manually installing tmux-which-key..."
-            if git clone https://github.com/tmux-plugins/tmux-which-key.git "$TMUX_PLUGINS_DIR/tmux-which-key" 2>/dev/null; then
-                echo "   ✅ tmux-which-key installed"
-            else
-                echo "   ❌ Failed to install tmux-which-key (network issue?)"
+            local install_success=false
+            for attempt in 1 2; do
+                if [ $attempt -gt 1 ]; then
+                    echo "   Retrying (attempt $attempt)..."
+                    sleep 3
+                fi
+                if git clone https://github.com/tmux-plugins/tmux-which-key.git "$TMUX_PLUGINS_DIR/tmux-which-key" 2>&1; then
+                    echo "   ✅ tmux-which-key installed"
+                    install_success=true
+                    break
+                fi
+            done
+            if [ "$install_success" != true ]; then
+                echo "   ⚠️  Failed to install tmux-which-key (network issue)"
+                echo "   You can install it later with: git clone https://github.com/tmux-plugins/tmux-which-key.git ~/.tmux/plugins/tmux-which-key"
             fi
         fi
         

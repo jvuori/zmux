@@ -80,6 +80,27 @@ if [ -n "$TMUX" ]; then
     bind '"\e[A": history-search-backward'
     bind '"\e[B": history-search-forward'
 fi
+
+# fzf key binding configuration
+# Change Ctrl+T (default) to Ctrl+F for file search
+# Note: This requires fzf key bindings to be loaded (usually via ~/.fzf.bash)
+if command -v fzf >/dev/null 2>&1; then
+    # Function to configure fzf bindings
+    _zmux_configure_fzf_bash() {
+        # Unbind default Ctrl+T binding
+        bind -r "\C-t" 2>/dev/null || true
+        # Bind Ctrl+F to fzf file search (same as Ctrl+T was)
+        # Check if __fzf_ctrl_t__ function exists (standard fzf function)
+        if type __fzf_ctrl_t__ >/dev/null 2>&1; then
+            bind '"\C-f": "\C-u \C-a\C-k$(__fzf_ctrl_t__)\e\C-e\C-y\C-a\C-y\ey\C-h\C-e\C-a\C-k"'
+        fi
+    }
+    # Try to configure (will work if fzf key bindings are already loaded)
+    _zmux_configure_fzf_bash
+    # If fzf key bindings load later, they will override this
+    # User may need to source this config again after fzf loads, or
+    # ensure fzf.bash is sourced before this config in ~/.bashrc
+fi
 EOF
 elif [ "$SHELL_NAME" = "zsh" ]; then
     cat > "$ZMUX_SHELL_CONFIG" << 'EOF'
@@ -113,6 +134,45 @@ _zmux_configure_keys() {
 
 # Configure keys - function call is silent and produces no console output
 _zmux_configure_keys
+
+# fzf key binding configuration
+# Change Ctrl+T (default) to Ctrl+F for file search
+# Note: Ensure fzf key bindings are loaded (usually via ~/.fzf.zsh) before this config
+_zmux_configure_fzf() {
+    if command -v fzf >/dev/null 2>&1; then
+        {
+            # Unbind default Ctrl+T binding
+            bindkey -r '^T' 2>/dev/null || true
+            # Bind Ctrl+F to fzf file search
+            # Try the standard fzf widget names
+            if (( $+functions[fzf-file-widget] )); then
+                bindkey '^F' fzf-file-widget
+            elif (( $+functions[__fzf_ctrl_t__] )); then
+                bindkey '^F' __fzf_ctrl_t__
+            fi
+        } >/dev/null 2>&1
+    fi
+}
+
+# Configure fzf keys - try immediately and also set up hook for delayed loading
+if [ -z "$_zmux_fzf_configured" ]; then
+    # Try immediately (fzf might already be loaded)
+    _zmux_configure_fzf
+    
+    # Set up precmd hook to configure after fzf loads (runs once)
+    autoload -Uz add-zsh-hook 2>/dev/null || true
+    if command -v add-zsh-hook >/dev/null 2>&1; then
+        _zmux_fzf_hook() {
+            _zmux_configure_fzf
+            # Remove hook after first successful run
+            if (( $+functions[fzf-file-widget] )) || (( $+functions[__fzf_ctrl_t__] )); then
+                _zmux_fzf_configured=1
+                add-zsh-hook -d precmd _zmux_fzf_hook 2>/dev/null || true
+            fi
+        }
+        add-zsh-hook precmd _zmux_fzf_hook 2>/dev/null || true
+    fi
+fi
 EOF
 fi
 

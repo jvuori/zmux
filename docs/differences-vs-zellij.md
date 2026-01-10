@@ -48,6 +48,7 @@ This document outlines the key differences between zmux (tmux configured like Ze
 | **Pane tabs** | ✅ | ❌ | Zellij-specific feature |
 | **Built-in themes** | ✅ | ⚠️ | zmux has one theme, less customizable |
 | **Pane borders** | ✅ | ⚠️ | Basic borders, less visual polish |
+| **Mouse drag scrolling** | ✅ | ⚠️ | Both auto-scroll when dragging to edge, but tmux is slower. Speed is hardcoded and cannot be changed via configuration |
 
 ## Visual Differences
 

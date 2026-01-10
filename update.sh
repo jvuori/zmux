@@ -70,6 +70,40 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
 echo "✅ Configuration files updated"
 
 # ============================================================================
+# Ensure WSL-aware xdg-open shim is installed for tmux-open compatibility
+# ============================================================================
+echo ""
+echo "🔧 Ensuring xdg-open shim is installed for WSL compatibility..."
+if [ ! -f "$HOME/.local/bin/xdg-open" ]; then
+        mkdir -p "$HOME/.local/bin"
+        cat > "$HOME/.local/bin/xdg-open" <<'SH'
+#!/bin/sh
+# WSL-aware xdg-open shim. If powershell.exe is available, use it to open
+# files/URLs in Windows default apps; otherwise fall back to system xdg-open.
+if command -v powershell.exe >/dev/null 2>&1; then
+    # Join all arguments into one quoted string
+    args=""
+    for a in "$@"; do
+        args="$args '$a'"
+    done
+    powershell.exe -NoProfile -Command "Start-Process $args" >/dev/null 2>&1 || exit 1
+    exit 0
+fi
+# Fallback to system xdg-open if present
+if command -v /usr/bin/xdg-open >/dev/null 2>&1; then
+    /usr/bin/xdg-open "$@" >/dev/null 2>&1 || exit 1
+    exit 0
+fi
+echo "xdg-open shim: no opener available" >&2
+exit 1
+SH
+        chmod +x "$HOME/.local/bin/xdg-open"
+        echo "✅ Installed WSL-aware xdg-open shim to ~/.local/bin/xdg-open"
+else
+        echo "ℹ️  xdg-open shim already present: ~/.local/bin/xdg-open"
+fi
+
+# ============================================================================
 # Step 3: Reload tmux configuration
 # ============================================================================
 
@@ -77,10 +111,8 @@ echo ""
 echo "🔄 Reloading tmux configuration..."
 
 if tmux has-session 2>/dev/null; then
-    # Reload in all active sessions
-    tmux list-sessions -F "#{session_name}" 2>/dev/null | while read -r session; do
-        tmux source-file -t "$session" ~/.tmux.conf 2>/dev/null || true
-    done
+    # Reload server configuration from the updated config file
+    tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
     echo "✅ Configuration reloaded in active sessions"
 else
     echo "ℹ️  No active tmux sessions. Config will load automatically on next start."
@@ -103,7 +135,8 @@ fi
 # Install/update plugins using TPM
 if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
     echo "   Installing new plugins..."
-    tmux source-file ~/.tmux.conf 2>/dev/null || true
+    # Ensure tmux loads the updated configuration (with guarded plugin runs)
+    tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
     tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || {
         echo "⚠️  Could not install plugins automatically. Please install manually:"
         echo "   In tmux, press Ctrl+a, then i"

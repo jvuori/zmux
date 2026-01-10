@@ -169,6 +169,40 @@ else
 fi
 
 # ============================================================================
+# Step 5.5: Install WSL-aware xdg-open shim
+# ============================================================================
+echo ""
+echo "🔧 Ensuring xdg-open shim is installed for WSL compatibility..."
+if [ ! -f "$HOME/.local/bin/xdg-open" ]; then
+        mkdir -p "$HOME/.local/bin"
+        cat > "$HOME/.local/bin/xdg-open" <<'SH'
+#!/bin/sh
+# WSL-aware xdg-open shim. If powershell.exe is available, use it to open
+# files/URLs in Windows default apps; otherwise fall back to system xdg-open.
+if command -v powershell.exe >/dev/null 2>&1; then
+    # Join all arguments into one quoted string
+    args=""
+    for a in "$@"; do
+        args="$args '$a'"
+    done
+    powershell.exe -NoProfile -Command "Start-Process $args" >/dev/null 2>&1 || exit 1
+    exit 0
+fi
+# Fallback to system xdg-open if present
+if command -v /usr/bin/xdg-open >/dev/null 2>&1; then
+    /usr/bin/xdg-open "$@" >/dev/null 2>&1 || exit 1
+    exit 0
+fi
+echo "xdg-open shim: no opener available" >&2
+exit 1
+SH
+        chmod +x "$HOME/.local/bin/xdg-open"
+        echo "✅ Installed WSL-aware xdg-open shim to ~/.local/bin/xdg-open"
+else
+        echo "ℹ️  xdg-open shim already present: ~/.local/bin/xdg-open"
+fi
+
+# ============================================================================
 # Step 6: Install plugins
 # ============================================================================
 
@@ -248,14 +282,7 @@ if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
                 echo "   ❌ Failed to install tmux-fzf (network issue?)"
             fi
         fi
-        if [ ! -d "$TMUX_PLUGINS_DIR/tmux-which-key" ]; then
-            echo "   Manually installing tmux-which-key..."
-            if git clone https://github.com/tmux-plugins/tmux-which-key.git "$TMUX_PLUGINS_DIR/tmux-which-key" 2>/dev/null; then
-                echo "   ✅ tmux-which-key installed"
-            else
-                echo "   ❌ Failed to install tmux-which-key (network issue?)"
-            fi
-        fi
+
         
         # Final check
         if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then

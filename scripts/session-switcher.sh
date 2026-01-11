@@ -2,49 +2,143 @@
 # ============================================================================
 # Session Switcher Script
 # ============================================================================
-# Interactive session switcher using sainnhe/tmux-fzf (required plugin)
-# This plugin provides fullscreen session switching via fzf
+# Interactive session switcher with last session as default
+# Orders sessions so the previously active session is first and selected by default
+
+# Note: We handle errors explicitly, so we don't use set -e
 
 # Ensure PATH includes common fzf locations
 export PATH="$HOME/.fzf/bin:$HOME/.local/bin:$PATH"
 
-# Execute the plugin's session.sh script directly with "switch" action
-# We change to the plugin directory to ensure relative paths work correctly
-TMUX_FZF_DIR="$HOME/.tmux/plugins/tmux-fzf"
+# Get the last active session (previously active session)
+LAST_SESSION=$(tmux display-message -p "#{client_last_session}" 2>/dev/null)
 
-# Debug: Log execution
-echo "Session switcher called" >> /tmp/tmux_session_switcher.log 2>&1
-echo "PATH: $PATH" >> /tmp/tmux_session_switcher.log 2>&1
-echo "fzf: $(command -v fzf 2>&1)" >> /tmp/tmux_session_switcher.log 2>&1
+# Get current session (to exclude it from the list)
+CURRENT_SESSION=$(tmux display-message -p "#S" 2>/dev/null)
 
-if [ -f "$TMUX_FZF_DIR/scripts/session.sh" ]; then
-    # Change to plugin directory and execute the script
-    cd "$TMUX_FZF_DIR" || exit 1
-    echo "Executing: $TMUX_FZF_DIR/scripts/session.sh switch" >> /tmp/tmux_session_switcher.log 2>&1
-    # Use bash explicitly and ensure we're in the right directory
-    bash -c "cd '$TMUX_FZF_DIR' && bash scripts/session.sh switch" 2>> /tmp/tmux_session_switcher.log
-    exit $?
-else
-    echo "ERROR: $TMUX_FZF_DIR/scripts/session.sh not found" >> /tmp/tmux_session_switcher.log 2>&1
-    tmux display-message "Session switcher: Plugin script not found"
+# Get all sessions
+ALL_SESSIONS=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
+
+if [ -z "$ALL_SESSIONS" ]; then
+    tmux display-message "No sessions available"
     exit 1
 fi
 
-# Fallback to main.sh if session.sh doesn't exist (shouldn't happen)
-if [ -f ~/.tmux/plugins/tmux-fzf/main.sh ]; then
-    # Launch tmux-fzf main menu - user can then select "session"
-    ~/.tmux/plugins/tmux-fzf/main.sh
+# Check if fzf is available
+if ! command -v fzf >/dev/null 2>&1; then
+    echo "❌ fzf is not installed!"
+    echo ""
+    echo "zmux requires fzf for session switching."
+    echo "Please install fzf:"
+    echo "  - Ubuntu/Debian: sudo apt install fzf"
+    echo "  - Or visit: https://github.com/junegunn/fzf"
+    echo ""
+    read -p "Press Enter to continue..."
+    exit 1
+fi
+
+# Build ordered session list: last session first (if it exists and is not current), then others
+ORDERED_SESSIONS=""
+OTHER_SESSIONS=""
+
+while IFS= read -r session; do
+    if [ -z "$session" ]; then
+        continue
+    fi
+    
+    # Skip current session
+    if [ "$session" = "$CURRENT_SESSION" ]; then
+        continue
+    fi
+    
+    # Put last session first
+    if [ -n "$LAST_SESSION" ] && [ "$session" = "$LAST_SESSION" ] && [ "$session" != "$CURRENT_SESSION" ]; then
+        ORDERED_SESSIONS="$session"$'\n'"$ORDERED_SESSIONS"
+    else
+        OTHER_SESSIONS="$OTHER_SESSIONS"$'\n'"$session"
+    fi
+done <<< "$ALL_SESSIONS"
+
+# Combine: last session first, then others
+FINAL_LIST=$(echo -e "$ORDERED_SESSIONS$OTHER_SESSIONS" | grep -v '^$')
+
+# If no sessions (other than current), exit
+if [ -z "$FINAL_LIST" ]; then
+    tmux display-message "No other sessions available"
     exit 0
 fi
 
-# If tmux-fzf is not available, show error and instructions
-echo "❌ tmux-fzf plugin (sainnhe/tmux-fzf) is not installed!"
-echo ""
-echo "zmux requires tmux-fzf for session switching."
-echo "Please install plugins:"
-echo "  1. In tmux, press Ctrl+a, then i"
-echo "  2. Or run: bash ~/.tmux/plugins/tpm/bin/install_plugins"
-echo ""
-read -p "Press Enter to continue..."
-exit 1
 
+# Use fzf to select session, with the first item (last session) selected by default
+# Use fzf-tmux which is designed to work properly with tmux
+# --select-1 would auto-select if only one, but we want to show the list
+# Instead, we'll use --header to indicate the first is the previous session
+
+# Use fzf-tmux which is designed to work with tmux
+# This handles the TTY properly and displays correctly
+FZF_TMUX_CMD=$(command -v fzf-tmux 2>/dev/null || echo "")
+FZF_CMD=$(command -v fzf 2>/dev/null || echo "fzf")
+
+# Create a preview function to show session pane content (like original tmux-fzf)
+PREVIEW_SCRIPT="/tmp/tmux_session_preview_$$"
+cat > "$PREVIEW_SCRIPT" << 'PREVIEW_EOF'
+#!/bin/bash
+SESSION_NAME="$1"
+if [ -z "$SESSION_NAME" ] || [ "$SESSION_NAME" = "[cancel]" ]; then
+    echo "No session selected"
+    exit 0
+fi
+
+# Extract session name (in case it has formatting)
+SESSION_NAME=$(echo "$SESSION_NAME" | sed 's/: .*$//')
+
+# Show the pane content from the first window of the session (like original tmux-fzf)
+tmux capture-pane -ep -t "$SESSION_NAME:" 2>/dev/null || echo "Session not found or no content"
+PREVIEW_EOF
+chmod +x "$PREVIEW_SCRIPT"
+
+# Try fzf-tmux first (best option), fallback to regular fzf
+if [ -n "$FZF_TMUX_CMD" ]; then
+    SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 80%,60% \
+        --header="Select session (first is previous session, press Enter to select)" \
+        --reverse \
+        --preview="$PREVIEW_SCRIPT {}" \
+        --preview-window=right:40%:follow \
+        --bind 'enter:accept' \
+        --bind 'ctrl-c:abort' \
+        2>/dev/null)
+else
+    # Fallback: use regular fzf (might not work in all contexts)
+    SELECTED=$(echo "$FINAL_LIST" | "$FZF_CMD" \
+        --header="Select session (first is previous session, press Enter to select)" \
+        --height=40% \
+        --reverse \
+        --preview="$PREVIEW_SCRIPT {}" \
+        --preview-window=right:40%:follow \
+        --bind 'enter:accept' \
+        --bind 'ctrl-c:abort' \
+        2>/dev/null)
+fi
+
+# Clean up preview script
+rm -f "$PREVIEW_SCRIPT" 2>/dev/null
+
+# If user cancelled (ESC or Ctrl+C), exit
+if [ -z "$SELECTED" ]; then
+    exit 0
+fi
+
+# Validate that the selected session still exists
+if ! tmux has-session -t "$SELECTED" 2>/dev/null; then
+    tmux display-message "Session '$SELECTED' no longer exists"
+    exit 0
+fi
+
+# Switch to the selected session
+if ! tmux switch-client -t "$SELECTED" 2>/dev/null; then
+    # If switch fails, show error but exit 0 to avoid status bar error
+    tmux display-message "Failed to switch to session: $SELECTED"
+    exit 0
+fi
+
+exit 0

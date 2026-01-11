@@ -37,30 +37,62 @@ if ! command -v fzf >/dev/null 2>&1; then
     exit 1
 fi
 
-# Build ordered session list: last session first (if it exists and is not current), then others
-ORDERED_SESSIONS=""
-OTHER_SESSIONS=""
+# Build ordered session list with smart ordering:
+# 1. Previous session first (automatically selected)
+# 2. Then all other sessions sorted by recency (most recently visited first)
+# Get sessions with their last_attached timestamps for sorting
+TEMP_SESSIONS="/tmp/tmux_sessions_$$"
+tmux list-sessions -F "#{session_last_attached} #{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
 
-while IFS= read -r session; do
-    if [ -z "$session" ]; then
+# Separate sessions: previous, current, and others
+PREVIOUS_SESSION=""
+OTHER_SESSIONS_ARRAY=()
+
+while IFS= read -r line; do
+    if [ -z "$line" ]; then
         continue
     fi
+    
+    TIMESTAMP=$(echo "$line" | awk '{print $1}')
+    SESSION_NAME=$(echo "$line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
     
     # Skip current session
-    if [ "$session" = "$CURRENT_SESSION" ]; then
+    if [ "$SESSION_NAME" = "$CURRENT_SESSION" ]; then
         continue
     fi
     
-    # Put last session first
-    if [ -n "$LAST_SESSION" ] && [ "$session" = "$LAST_SESSION" ] && [ "$session" != "$CURRENT_SESSION" ]; then
-        ORDERED_SESSIONS="$session"$'\n'"$ORDERED_SESSIONS"
+    # Identify previous session
+    if [ -n "$LAST_SESSION" ] && [ "$SESSION_NAME" = "$LAST_SESSION" ]; then
+        PREVIOUS_SESSION="$TIMESTAMP $SESSION_NAME"
     else
-        OTHER_SESSIONS="$OTHER_SESSIONS"$'\n'"$session"
+        OTHER_SESSIONS_ARRAY+=("$TIMESTAMP $SESSION_NAME")
     fi
-done <<< "$ALL_SESSIONS"
+done < "$TEMP_SESSIONS"
 
-# Combine: last session first, then others
-FINAL_LIST=$(echo -e "$ORDERED_SESSIONS$OTHER_SESSIONS" | grep -v '^$')
+# Sort other sessions by timestamp (most recent first)
+IFS=$'\n' SORTED_OTHERS=($(printf '%s\n' "${OTHER_SESSIONS_ARRAY[@]}" | sort -rn))
+unset IFS
+
+# Build final list: previous first, then sorted others
+FINAL_LIST=""
+if [ -n "$PREVIOUS_SESSION" ]; then
+    # Extract just the session name (remove timestamp)
+    PREV_NAME=$(echo "$PREVIOUS_SESSION" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+    FINAL_LIST="$PREV_NAME"
+fi
+
+# Add sorted other sessions (extract session names, remove timestamps)
+for session_line in "${SORTED_OTHERS[@]}"; do
+    SESSION_NAME=$(echo "$session_line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+    if [ -n "$FINAL_LIST" ]; then
+        FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
+    else
+        FINAL_LIST="$SESSION_NAME"
+    fi
+done
+
+# Clean up temp file
+rm -f "$TEMP_SESSIONS" 2>/dev/null
 
 # If no sessions (other than current), exit
 if [ -z "$FINAL_LIST" ]; then
@@ -100,7 +132,7 @@ chmod +x "$PREVIEW_SCRIPT"
 # Try fzf-tmux first (best option), fallback to regular fzf
 if [ -n "$FZF_TMUX_CMD" ]; then
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 80%,60% \
-        --header="Select session (first is previous session, press Enter to select)" \
+        --header="Select session (previous session is highlighted, press Enter to select)" \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:40%:follow \
@@ -110,7 +142,7 @@ if [ -n "$FZF_TMUX_CMD" ]; then
 else
     # Fallback: use regular fzf (might not work in all contexts)
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_CMD" \
-        --header="Select session (first is previous session, press Enter to select)" \
+        --header="Select session (previous session is highlighted, press Enter to select)" \
         --height=40% \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \

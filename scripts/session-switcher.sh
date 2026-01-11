@@ -131,22 +131,22 @@ chmod +x "$PREVIEW_SCRIPT"
 
 # Try fzf-tmux first (best option), fallback to regular fzf
 if [ -n "$FZF_TMUX_CMD" ]; then
-    SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 80%,60% \
-        --header="Select session (previous session is highlighted, press Enter to select)" \
+    SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 70%,60% \
+        --header="Select session (Enter to select)" \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
-        --preview-window=right:40%:follow \
+        --preview-window=right:55%:follow \
         --bind 'enter:accept' \
         --bind 'ctrl-c:abort' \
         2>/dev/null)
 else
     # Fallback: use regular fzf (might not work in all contexts)
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_CMD" \
-        --header="Select session (previous session is highlighted, press Enter to select)" \
+        --header="Select session (Enter to select)" \
         --height=40% \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
-        --preview-window=right:40%:follow \
+        --preview-window=right:55%:follow \
         --bind 'enter:accept' \
         --bind 'ctrl-c:abort' \
         2>/dev/null)

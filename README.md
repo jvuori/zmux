@@ -129,9 +129,18 @@ See [docs/shell-config.md](docs/shell-config.md) for manual setup or more detail
 
 zmux uses Zellij's default keybindings - direct key combinations (no prefix needed):
 
-### Lock Key
+### Lock Mode
 
-- **Lock/Unlock**: `Ctrl+a` - Locks the session
+- **Lock/Unlock**: `Ctrl+g` - Toggles lock mode
+
+When lock mode is enabled:
+
+- ✅ **All keyboard input goes directly to the application** (like Ctrl+p for fzf, Ctrl+s for vim search, etc.)
+- ✅ **Visual indicator** shows 🔒 LOCK in the status bar
+- ✅ **Only Ctrl+g works** to toggle lock mode off and restore tmux keybindings
+- ✅ **Perfect for applications** that need Ctrl+\* keybindings (fzf, vim, lazygit, neovim with telescope, etc.)
+
+This is zmux's implementation of Zellij's "Lock mode" and solves the problem where tmux consumes keybindings needed by applications.
 
 ### Modes
 
@@ -312,7 +321,6 @@ If you ran `install.sh` but your old tmux configuration is still active:
    ```
 
 3. **Reload tmux config in existing sessions:**
-
    - Press your current prefix (usually `Ctrl+b`)
    - Type: `:source-file ~/.tmux.conf`
    - Press Enter

@@ -2,9 +2,38 @@
 
 This keymap matches Zellij's default keybindings as closely as possible.
 
-## Lock Key
+## Lock Mode (`Ctrl+g`)
 
-- **Lock/Unlock**: `Ctrl+a` - Locks the session (like Zellij's locked mode)
+Lock mode is zmux's implementation of Zellij's lock mode. When enabled, all keyboard input goes directly to the application without being intercepted by tmux.
+
+### Activation
+
+| Key      | Action                                                               |
+| -------- | -------------------------------------------------------------------- |
+| `Ctrl+g` | Toggle lock mode ON (visual indicator 🔒 LOCK appears in status bar) |
+
+### Behavior When Locked
+
+- ✅ All keyboard input goes directly to the application
+- ✅ No tmux keybindings are active (Ctrl+p, Ctrl+n, etc. go to the app)
+- ✅ Only `Ctrl+g` works to toggle lock mode OFF
+- ✅ Perfect for applications that need Ctrl+\* keybindings:
+  - `Ctrl+p` for fzf (find files/history)
+  - `Ctrl+s` for vim/neovim search
+  - `Ctrl+l` for lazygit
+  - `Ctrl+p` for neovim Telescope plugin
+  - And many others
+
+### Use Case Example
+
+You want to use fzf with `Ctrl+p`:
+
+1. Press `Ctrl+g` to enable lock mode (status bar shows 🔒 LOCK)
+2. Now `Ctrl+p` goes to fzf instead of triggering pane mode
+3. Use fzf to find and open files
+4. Press `Ctrl+g` again to disable lock mode and restore tmux keybindings
+
+## Lock Key (Legacy - now Ctrl+g)
 
 ## Mode Activation
 

@@ -5,6 +5,22 @@
 # Interactive session switcher with last session as default
 # Orders sessions so the previously active session is first and selected by default
 
+# Prevent accidental sourcing: running this file with `source` in an interactive
+# shell starts an interactive UI (fzf) inside the current shell and can hang
+# or consume CPU. Detect sourcing and bail out safely.
+_sess_src_detected=0
+if [ -n "$ZSH_VERSION" ]; then
+  case $ZSH_EVAL_CONTEXT in *:file) _sess_src_detected=0;; *) _sess_src_detected=1;; esac
+elif [ -n "$BASH_VERSION" ]; then
+  if [ "${BASH_SOURCE[0]}" != "${0}" ]; then _sess_src_detected=1; fi
+else
+  (return 0 2>/dev/null) && _sess_src_detected=1 || _sess_src_detected=0
+fi
+if [ "$_sess_src_detected" -eq 1 ]; then
+  echo "This script is meant to be run, not sourced. Run: '$0' (or bash $0)"
+  return 0 2>/dev/null || exit 0
+fi
+
 # Note: We handle errors explicitly, so we don't use set -e
 
 # Ensure PATH includes common fzf locations
@@ -46,24 +62,32 @@ build_session_list() {
     local previous_session=""
     local other_sessions_array=()
     
-    while IFS= read -r line; do
-        if [ -z "$line" ]; then
+    # Debug: Check if temp file exists and has content
+    if [ ! -f "$temp_file" ] || [ ! -s "$temp_file" ]; then
+        return
+    fi
+    
+    while IFS='|' read -r timestamp session_name; do
+        # Skip empty lines
+        if [ -z "$session_name" ]; then
             continue
         fi
         
-        local timestamp=$(echo "$line" | awk '{print $1}')
-        local session_name=$(echo "$line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+        # If timestamp is empty, use 0 (these sessions are sorted to the end)
+        if [ -z "$timestamp" ]; then
+            timestamp="0"
+        fi
         
         # Skip current session
         if [ "$session_name" = "$current_session" ]; then
             continue
         fi
         
-        # Identify previous session
+        # Identify previous session (if last_session is available)
         if [ -n "$last_session" ] && [ "$session_name" = "$last_session" ]; then
-            previous_session="$timestamp $session_name"
+            previous_session="$timestamp|$session_name"
         else
-            other_sessions_array+=("$timestamp $session_name")
+            other_sessions_array+=("$timestamp|$session_name")
         fi
     done < "$temp_file"
     
@@ -75,13 +99,13 @@ build_session_list() {
     # Build final list: previous first, then sorted others
     local final_list=""
     if [ -n "$previous_session" ]; then
-        local prev_name=$(echo "$previous_session" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+        local prev_name=$(echo "$previous_session" | cut -d'|' -f2)
         final_list="$prev_name"
     fi
     
     # Add sorted other sessions
     for session_line in "${sorted_others[@]}"; do
-        local session_name=$(echo "$session_line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+        local session_name=$(echo "$session_line" | cut -d'|' -f2)
         if [ -n "$final_list" ]; then
             final_list="$final_list"$'\n'"$session_name"
         else
@@ -96,7 +120,11 @@ build_session_list() {
 # 1. Previous session first (automatically selected)
 # 2. Then all other sessions sorted by recency (most recently visited first)
 TEMP_SESSIONS="/tmp/tmux_sessions_$$"
-tmux list-sessions -F "#{session_last_attached} #{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
+
+# Note: We need to handle sessions that have never been attached (empty last_attached timestamp)
+# Format from list-sessions is: "#{session_last_attached} #{session_name}"
+# Sessions without attachment history will have empty first field
+tmux list-sessions -F "#{session_last_attached}|#{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
 
 FINAL_LIST=$(build_session_list "$CURRENT_SESSION" "$LAST_SESSION" "$TEMP_SESSIONS")
 
@@ -107,20 +135,19 @@ cat > "$RELOAD_SCRIPT" << 'RELOAD_EOF'
 CURRENT=$(tmux display-message -p "#S" 2>/dev/null)
 LAST=$(tmux display-message -p "#{client_last_session}" 2>/dev/null)
 TEMP=$(mktemp)
-tmux list-sessions -F "#{session_last_attached} #{session_name}" > "$TEMP" 2>/dev/null
+tmux list-sessions -F "#{session_last_attached}|#{session_name}" > "$TEMP" 2>/dev/null
 
 PREVIOUS_SESSION=""
 OTHER_SESSIONS_ARRAY=()
 
-while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    TIMESTAMP=$(echo "$line" | awk '{print $1}')
-    SESSION_NAME=$(echo "$line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+while IFS='|' read -r TIMESTAMP SESSION_NAME; do
+    [ -z "$SESSION_NAME" ] && continue
+    [ -z "$TIMESTAMP" ] && TIMESTAMP="0"
     [ "$SESSION_NAME" = "$CURRENT" ] && continue
     if [ -n "$LAST" ] && [ "$SESSION_NAME" = "$LAST" ]; then
-        PREVIOUS_SESSION="$TIMESTAMP $SESSION_NAME"
+        PREVIOUS_SESSION="$TIMESTAMP|$SESSION_NAME"
     else
-        OTHER_SESSIONS_ARRAY+=("$TIMESTAMP $SESSION_NAME")
+        OTHER_SESSIONS_ARRAY+=("$TIMESTAMP|$SESSION_NAME")
     fi
 done < "$TEMP"
 
@@ -129,12 +156,12 @@ unset IFS
 
 FINAL_LIST=""
 if [ -n "$PREVIOUS_SESSION" ]; then
-    PREV_NAME=$(echo "$PREVIOUS_SESSION" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+    PREV_NAME=$(echo "$PREVIOUS_SESSION" | cut -d'|' -f2)
     FINAL_LIST="$PREV_NAME"
 fi
 
 for session_line in "${SORTED_OTHERS[@]}"; do
-    SESSION_NAME=$(echo "$session_line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}' | sed 's/ $//')
+    SESSION_NAME=$(echo "$session_line" | cut -d'|' -f2)
     if [ -n "$FINAL_LIST" ]; then
         FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
     else

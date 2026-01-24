@@ -1,89 +1,45 @@
 #!/bin/bash
-# show-help.sh - Display zmux keybinding help
+# show-help.sh - Display zmux keybinding help in a popup
 
-# Create a temporary file with help content
-HELP_FILE=$(mktemp)
-cat > "$HELP_FILE" <<'HELP'
+cat <<'HELP'
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          zmux Keybindings Help                               │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Mode Activation                                                              │
-│   Ctrl+p  Pane mode      - Manage panes (split, close, navigate)             │
-│   Ctrl+n  Resize mode    - Resize panes with arrow keys                      │
-│   Ctrl+h  Move mode      - Move/reorder panes                                │
-│   Ctrl+t  Tab mode       - Manage tabs/windows                               │
-│   Ctrl+s  Scroll mode    - Scroll and copy mode                              │
-│   Ctrl+o  Session mode   - Session management                                │
+│   Ctrl+g  Lock/Unlock     - Lock all keys to prevent accidents               │
+│   Ctrl+a  Prefix key      - Activate prefix for tmux commands                │
 │                                                                              │
 │ Quick Actions                                                                │
-│   Ctrl+a       Lock/Unlock session                                           │
-│   Ctrl+q       Quit (kill all sessions)                                      │
 │   Ctrl+a r     Reload configuration                                          │
 │   Ctrl+a s     Session switcher                                              │
 │   Ctrl+a i     Install plugins                                               │
 │   Ctrl+a u     Update plugins                                                │
 │   Ctrl+a ?     Show this help                                                │
 │                                                                              │
-│ Pane Mode (Ctrl+p)                                                           │
-│   h/←    Move left          l/→    Move right                                │
-│   j/↓    Move down          k/↑    Move up                                   │
-│   n      New pane (smart)   x      Close pane                                │
-│   p      Switch focus       f      Fullscreen                                │
+│ Lock Mode (Shows 🔒 in status bar)                                           │
+│   When active: All keys are passed to the terminal                           │
+│   Exit by: Pressing Ctrl+g or any unbound key (like §)                       │
+│   Purpose: Prevent tmux from intercepting keys                               │
 │                                                                              │
-│ Resize Mode (Ctrl+n)                                                         │
-│   ←/h    Resize left        →/l    Resize right                              │
-│   ↑/k    Resize up          ↓/j    Resize down                               │
-│   H/L/K/J  Coarse resize                                                     │
+│ Alt+Arrow Keys                                                               │
+│   Alt+←  Move left        Alt+→  Move right                                  │
+│   Alt+↑  Move up          Alt+↓  Move down                                   │
 │                                                                              │
-│ Tab Mode (Ctrl+t)                                                            │
-│   ←/h    Previous tab      →/l     Next tab                                  │
-│   n      New tab            x      Close tab                                 │
-│   r      Rename tab         1-9    Switch to tab                             │
+│ Lock Mode covers extensive key combinations:                                 │
+│   ✓ All letters (a-z, A-Z)                                                  │
+│   ✓ All numbers (0-9)                                                       │
+│   ✓ Alt combinations (Alt+a, Alt+arrows, etc)                                │
+│   ✓ Ctrl combinations (Ctrl+a, Ctrl+arrows, etc)                             │
+│   ✓ Function keys (F1-F20 with modifiers)                                    │
+│   ✓ Special characters and symbols                                           │
+│   ✓ Tab, Enter, Backspace, Escape                                            │
 │                                                                              │
-│ Session Mode (Ctrl+o)                                                        │
-│   n      New session        r      Rename session                            │
-│   w      Session manager    d      Detach                                    │
+│ To exit lock mode:                                                           │
+│   1. Press Ctrl+g (always works)                                             │
+│   2. Press any unbound key like § (auto-exits and forwards key)              │
 │                                                                              │
-│ Scroll Mode (Ctrl+s)                                                         │
-│   ↑/k    Scroll up          ↓/j    Scroll down                               │
-│   v      Begin selection    y      Copy & exit                               │
-│                                                                              │
-│ Shared (All Modes)                                                           │
-│   Alt+h/←  Move left       Alt+l/→  Move right                               │
-│   Alt+j/↓  Move down       Alt+k/↑  Move up                                  │
-│   Alt+n    New pane        Alt+=    Resize increase                          │
-│                                                                              │
-│ Press 'q' to close                                                           │
+│ Status Bar                                                                   │
+│   A^  Shows prefix is active (waiting for next key after Ctrl+A)            │
+│   🔒  Shows lock mode is active (all keys sent to terminal)                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 HELP
-
-# Check if tmux popup is available (tmux 3.2+)
-if tmux display-popup -h >/dev/null 2>&1; then
-    # Use popup for better display
-    # Note: Esc key handling in tmux popups can be unreliable
-    # We'll use less which has better terminal handling
-    # Create a wrapper script that handles input properly
-    WRAPPER=$(mktemp)
-    cat > "$WRAPPER" <<'WRAPPER_SCRIPT'
-#!/bin/bash
-cat "$1"
-# Configure terminal for character-by-character input
-exec < /dev/tty
-old_stty=$(stty -g 2>/dev/null)
-stty raw -echo cbreak 2>/dev/null
-# Read and check for q or Esc
-while true; do
-    char=$(dd bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')
-    case "$char" in
-        113|81) break ;;  # q or Q
-        27) break ;;      # Esc
-    esac
-done
-stty "$old_stty" 2>/dev/null
-WRAPPER_SCRIPT
-    chmod +x "$WRAPPER"
-    tmux display-popup -w 80 -h 30 -E "$WRAPPER '$HELP_FILE'; rm -f '$HELP_FILE' '$WRAPPER'"
-else
-    # Fallback: display in a new window with less (supports q, Esc may work)
-    tmux new-window -n "zmux-help" "less -R '$HELP_FILE'; rm -f '$HELP_FILE'"
-fi

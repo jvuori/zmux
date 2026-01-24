@@ -11,8 +11,8 @@ CURRENT_TABLE=$(tmux display-message -p '#{client_key_table}' 2>/dev/null)
 CURRENT_TABLE="${CURRENT_TABLE:-root}"
 
 if [ "$CURRENT_TABLE" = "locked" ]; then
-    # In locked mode, show lock icon instead of prefix
-    echo "#[fg=colour208,bold]🔒 LOCK#[default]"
+    # In locked mode, show lock icon only
+    echo "#[fg=colour208,bold]🔒#[default]"
 else
     # In normal mode, show the prefix-highlight (usually Ctrl+A indicator)
     # This uses the prefix_highlight plugin variable if available

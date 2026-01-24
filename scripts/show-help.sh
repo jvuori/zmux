@@ -26,8 +26,8 @@ cat <<'HELP'
 │   Alt+↑  Move up          Alt+↓  Move down                                   │
 │                                                                              │
 │ Lock Mode covers extensive key combinations:                                 │
-│   ✓ All letters (a-z, A-Z)                                                  │
-│   ✓ All numbers (0-9)                                                       │
+│   ✓ All letters (a-z, A-Z)                                                   │
+│   ✓ All numbers (0-9)                                                        │
 │   ✓ Alt combinations (Alt+a, Alt+arrows, etc)                                │
 │   ✓ Ctrl combinations (Ctrl+a, Ctrl+arrows, etc)                             │
 │   ✓ Function keys (F1-F20 with modifiers)                                    │
@@ -39,7 +39,7 @@ cat <<'HELP'
 │   2. Press any unbound key like § (auto-exits and forwards key)              │
 │                                                                              │
 │ Status Bar                                                                   │
-│   A^  Shows prefix is active (waiting for next key after Ctrl+A)            │
+│   A^  Shows prefix is active (waiting for next key after Ctrl+A)             │
 │   🔒  Shows lock mode is active (all keys sent to terminal)                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 HELP

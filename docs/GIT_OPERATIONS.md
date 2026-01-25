@@ -11,6 +11,7 @@ Ctrl+g is now available for git operations with fzf integration. This feature al
 Lists all remote branches (without `origin/` prefix) for easy fuzzy searching.
 
 **Usage:**
+
 ```bash
 # Type a git command and use Ctrl+g, b to insert a branch name
 $ git checkout [Ctrl+g, b]
@@ -21,6 +22,7 @@ $ git checkout feature/new-api [cursor here - you can add more args]
 ```
 
 **Features:**
+
 - Shows all remote branches in fzf
 - Filters by typing branch name
 - Shows 5 recent commits on selected branch
@@ -92,6 +94,7 @@ When you source the shell config (from `setup-shell.sh`):
 ## Usage Examples
 
 ### Basic branch checkout
+
 ```bash
 $ git checkout [Ctrl+g, b]
 > feature/login [Enter]
@@ -99,6 +102,7 @@ $ git checkout feature/login [cursor here]
 ```
 
 ### Merge a branch
+
 ```bash
 $ git merge [Ctrl+g, b]
 > bugfix/header [Enter]
@@ -106,6 +110,7 @@ $ git merge bugfix/header [cursor here]
 ```
 
 ### Rebase workflow
+
 ```bash
 $ git rebase -i [Ctrl+g, b]
 > main [Enter]
@@ -163,6 +168,7 @@ chmod +x ~/.config/tmux/scripts/fzf-git-branch.sh
 ## Troubleshooting
 
 ### "fzf is not installed" error
+
 ```bash
 # Install fzf:
 sudo apt install fzf              # Ubuntu/Debian
@@ -171,6 +177,7 @@ brew install fzf                  # macOS
 ```
 
 ### Git operations don't work
+
 1. Ensure zmux is installed: `./install.sh`
 2. Reload your shell: `source ~/.bashrc` or `source ~/.zshrc`
 3. Verify fzf-git-branch.sh exists and is executable:
@@ -184,6 +191,7 @@ brew install fzf                  # macOS
    ```
 
 ### Keybinding not responding
+
 1. Verify setup-shell.sh was run: `grep "zmux shell config" ~/.bashrc`
 2. Check if the config file exists: `cat ~/.config/zmux/shell-config`
 3. For zsh, ensure it's loaded before fzf: check `~/.zshrc` order

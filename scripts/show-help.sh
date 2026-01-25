@@ -36,11 +36,12 @@ PANE-SPECIFIC MODES
 GIT OPERATIONS  (Ctrl+g, [subcommand])
 
   Ctrl+g, b     Git branch     - Insert branch name into command line
+  Ctrl+g, c     Git commit     - Insert commit hash into command line
   
   Notes:
     - Git operations open fzf for interactive selection
-    - Selected branch name is inserted at cursor (doesn't execute)
-    - Type the branch name to filter
+    - Selected branch name or commit hash is inserted at cursor (doesn't execute)
+    - Type the branch name or commit message to filter
     - Press Enter to select and insert
     - Useful for: git checkout, git merge, git rebase, etc.
 

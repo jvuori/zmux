@@ -147,6 +147,7 @@ This is zmux's implementation of Zellij's "Lock mode" and solves the problem whe
 - **Git branch**: `Ctrl+g, b` - Insert branch name into command line (requires fzf)
 
 Example workflow:
+
 ```bash
 $ git checkout [Ctrl+g, b]
 > [fzf opens with branches]

@@ -60,11 +60,13 @@ cp "$SCRIPT_DIR/scripts/session-switcher.sh" "$TMUX_CONFIG_DIR/scripts/session-s
 cp "$SCRIPT_DIR/scripts/doctor.sh" "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 cp "$SCRIPT_DIR/scripts/tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
 cp "$SCRIPT_DIR/scripts/show-help.sh" "$TMUX_CONFIG_DIR/scripts/show-help.sh"
+cp "$SCRIPT_DIR/scripts/get-mode-help.sh" "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 cp "$SCRIPT_DIR/scripts/capture-cursor-agent-session.sh" "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/show-help.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
 
 echo "✅ Configuration files updated"

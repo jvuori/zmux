@@ -280,13 +280,27 @@ This will:
 
 ## Requirements
 
-- **tmux** 2.0+ (installed automatically by install script)
-- **git** (for TPM and plugin installation)
-- **bash** (for scripts)
+### Required
 
-### Optional
+- **tmux** 3.0+ (minimum 2.0+, but 3.0+ recommended for all features)
+  - The install script will attempt to install this if missing
+  - On Debian/Ubuntu: `sudo apt-get install tmux`
+  - On macOS: `brew install tmux`
+- **git** - Required for cloning TPM (Tmux Plugin Manager) and plugin installation
+  - The install script will fail without this
+  - On Debian/Ubuntu: `sudo apt-get install git`
+  - On macOS: `brew install git`
+- **bash** - Required for install and plugin scripts
+  - Comes pre-installed on most systems
 
-- **fzf** - For enhanced session switching (recommended)
+### Optional (Highly Recommended)
+
+- **fzf** (0.67.0+) - For interactive features and git operations
+  - Git mode requires this for branch/commit selection
+  - Enables tmux-fzf plugin for enhanced session switching
+  - On Debian/Ubuntu: `sudo apt-get install fzf`
+  - On macOS: `brew install fzf`
+  - Without it: Git operations will fail, but core tmux functionality still works
 
 ## Troubleshooting
 

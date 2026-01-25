@@ -30,6 +30,6 @@ case "$KEY_TABLE" in
     ;;
   *)
     # Root mode: Show all modes with single Ctrl+ prefix
-    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour208]g#[default]:#[fg=colour208]lock#[fg=colour244]]"
+    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour220,bold]g: lock#[fg=colour244]]"
     ;;
 esac

@@ -4,6 +4,15 @@
 
 PANE_ID="${1}"
 
+# Check if locked mode is active
+LOCK_MODE=$(tmux display-message -p -t "$PANE_ID" "#{@lock_mode}")
+
+# If locked, show only unlock hint
+if [ "$LOCK_MODE" = "1" ]; then
+    echo "#[fg=colour244]Ctrl+ [#[fg=colour220]g:unlock#[fg=colour244]]"
+    exit 0
+fi
+
 # Get current key table
 KEY_TABLE=$(tmux display-message -p -t "$PANE_ID" "#{client_key_table}")
 

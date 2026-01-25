@@ -97,6 +97,7 @@ cp "$SCRIPT_DIR/scripts/lock-mode-indicator.sh" "$TMUX_CONFIG_DIR/scripts/lock-m
 cp "$SCRIPT_DIR/scripts/swap-pane-left.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
 cp "$SCRIPT_DIR/scripts/swap-pane-right.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
 cp "$SCRIPT_DIR/scripts/session-killer.sh" "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
+cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -108,6 +109,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/lock-mode-indicator.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 
 echo "✅ Configuration files copied"
 

@@ -10,6 +10,7 @@ MAIN MODES (Always available - shown in status bar)
 
   Ctrl+o   Sessions   | Ctrl+t   Tabs         | Ctrl+p   Panes
   Ctrl+h   Move pane  | Ctrl+n   Resize pane  | Ctrl+l   Lock/Unlock
+  Ctrl+g   Git ops
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -22,6 +23,32 @@ COMMON ACTIONS (Same across Session, Tab, and Pane modes)
   Kill          Ctrl+o, x   Ctrl+t, x    Ctrl+p, x
   Switch        Ctrl+o, w   
   Navigate                  Ctrl+t, ←→   Ctrl+t, ←↑↓→
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PANE-SPECIFIC MODES
+
+  Ctrl+h, ←↑↓→  Move/Swap panes  - Reposition panes within the window
+  Ctrl+n, ←↑↓→  Resize panes     - Adjust pane dimensions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GIT OPERATIONS  (Ctrl+g, [subcommand])
+
+  Ctrl+g, b     Git branch     - Fuzzy search and checkout/switch branches
+  
+  Notes:
+    - Git operations open fzf for interactive selection
+    - Type the branch name to filter
+    - Press Enter to select
+    - Use in root mode to operate on git repository
+
+  Example workflow:
+    $ git checkout [Enter]
+    > Ctrl+g, b
+    > [fzf opens showing all branches]
+    > Type to find: "feat"
+    > [Press Enter to checkout branch]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

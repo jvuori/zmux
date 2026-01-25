@@ -101,6 +101,24 @@ if command -v fzf >/dev/null 2>&1; then
     # User may need to source this config again after fzf loads, or
     # ensure fzf.bash is sourced before this config in ~/.bashrc
 fi
+
+# Git operations with Ctrl+g prefix
+# Ctrl+g, b: Git branch (fuzzy search with fzf)
+_zmux_setup_git_bash() {
+    if command -v fzf >/dev/null 2>&1 && [ -x "$HOME/.config/tmux/scripts/fzf-git-branch.sh" ]; then
+        # Define git operation menu
+        _git_operation() {
+            read -t 0.5 -n 1 op
+            case "$op" in
+                b) ~/.config/tmux/scripts/fzf-git-branch.sh checkout ;;
+                *) echo "Unknown git operation: $op" ;;
+            esac
+        }
+        # Bind Ctrl+g to show git menu (requires second key)
+        bind -x '"\C-g": _git_operation'
+    fi
+}
+_zmux_setup_git_bash
 EOF
 elif [ "$SHELL_NAME" = "zsh" ]; then
     cat > "$ZMUX_SHELL_CONFIG" << 'EOF'
@@ -153,6 +171,28 @@ _zmux_configure_fzf() {
         } >/dev/null 2>&1
     fi
 }
+
+# Git operations with Ctrl+g prefix (zsh)
+# Ctrl+g, b: Git branch (fuzzy search with fzf)
+_zmux_configure_git_zsh() {
+    if command -v fzf >/dev/null 2>&1 && [ -x "$HOME/.config/tmux/scripts/fzf-git-branch.sh" ]; then
+        {
+            # Define git operation menu widget
+            _zmux_git_operation() {
+                local op
+                read -k op 2>/dev/null
+                case "$op" in
+                    b) ~/.config/tmux/scripts/fzf-git-branch.sh checkout ;;
+                    *) echo "Unknown git operation: $op" ;;
+                esac
+            }
+            zle -N _zmux_git_operation
+            # Bind Ctrl+g to git menu
+            bindkey '^G' _zmux_git_operation
+        } >/dev/null 2>&1
+    fi
+}
+_zmux_configure_git_zsh
 
 # Configure fzf keys - try immediately and also set up hook for delayed loading
 if [ -z "$_zmux_fzf_configured" ]; then

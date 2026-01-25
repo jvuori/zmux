@@ -131,16 +131,29 @@ zmux uses Zellij's default keybindings - direct key combinations (no prefix need
 
 ### Lock Mode
 
-- **Lock/Unlock**: `Ctrl+g` - Toggles lock mode
+- **Lock/Unlock**: `Ctrl+l` - Toggles lock mode
 
 When lock mode is enabled:
 
 - ✅ **All keyboard input goes directly to the application** (like Ctrl+p for fzf, Ctrl+s for vim search, etc.)
 - ✅ **Visual indicator** shows 🔒 LOCK in the status bar
-- ✅ **Only Ctrl+g works** to toggle lock mode off and restore tmux keybindings
+- ✅ **Only Ctrl+l works** to toggle lock mode off and restore tmux keybindings
 - ✅ **Perfect for applications** that need Ctrl+\* keybindings (fzf, vim, lazygit, neovim with telescope, etc.)
 
 This is zmux's implementation of Zellij's "Lock mode" and solves the problem where tmux consumes keybindings needed by applications.
+
+### Git Operations
+
+- **Git menu**: `Ctrl+g` - Git operations with fzf integration
+  - `Ctrl+g, b` - Fuzzy search and checkout git branches (requires fzf)
+
+Example workflow:
+```bash
+$ git checkout [press Ctrl+g, b]
+> [fzf opens with all branches]
+> Type to filter: "feature"
+> [Press Enter to checkout]
+```
 
 ### Modes
 

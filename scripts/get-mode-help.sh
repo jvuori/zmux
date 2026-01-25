@@ -39,10 +39,10 @@ case "$KEY_TABLE" in
     ;;
   git)
     # Ctrl+g: Git operations mode
-    echo "#[fg=colour244][#[fg=colour200]b#[default]: branch select#[fg=colour244] | #[fg=colour200]Esc#[default]: cancel#[fg=colour244]]"
+    echo "#[fg=colour244][#[fg=colour200]b#[default]: branches #[fg=colour244]| #[fg=colour200]c#[default]: commits#[fg=colour244]]"
     ;;
   *)
     # Root mode: Show all modes with single Ctrl+ prefix, git operations, and lock
-    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour220]l#[default]:#[fg=colour220]lock#[fg=colour244] | #[fg=colour200]g,b#[default]:#[fg=colour200]git branch#[fg=colour244]]"
+    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour220]l#[default]:#[fg=colour220]lock#[fg=colour244] | #[fg=colour200]g#[default]:#[fg=colour200]git(b/c)#[fg=colour244]]"
     ;;
 esac

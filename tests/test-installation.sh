@@ -92,18 +92,19 @@ fi
 
 echo "✓ Plugins configured in tmux.conf"
 
-# Check if fzf is installed
-if [ ! -d "$HOME/.fzf" ]; then
-    echo "ERROR: fzf not installed"
+# Check if fzf is installed and working
+if ! command -v fzf >/dev/null 2>&1; then
+    echo "ERROR: fzf not installed or not in PATH"
     exit 1
 fi
 
-if [ ! -x "$HOME/.fzf/bin/fzf" ]; then
-    echo "ERROR: fzf binary not executable"
+# Verify fzf is actually executable and can run
+if ! fzf --version >/dev/null 2>&1; then
+    echo "ERROR: fzf command failed or not working"
     exit 1
 fi
 
-echo "✓ fzf installed"
+echo "✓ fzf installed and working"
 
 echo ""
 echo "All installation tests passed!"

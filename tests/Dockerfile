@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     ncurses-bin \
     procps \
     ca-certificates \
+    fzf \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a test user (non-root testing)
@@ -19,10 +20,6 @@ RUN useradd -m -s /bin/bash testuser
 # Switch to test user
 USER testuser
 WORKDIR /home/testuser
-
-# Install fzf manually (avoiding interactive prompts)
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf \
-    && ~/.fzf/install --bin
 
 # Copy zmux project into container
 COPY --chown=testuser:testuser . /home/testuser/zmux

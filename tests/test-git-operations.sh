@@ -52,6 +52,14 @@ echo "✓ Branch script exists and is executable"
 # Use fzf in filter mode (--filter) with the first branch to automate selection
 SELECTED_BRANCH=$(cd "$TEST_REPO" && bash "$BRANCH_SCRIPT" 2>&1 <<< "feature" || true)
 
+# Check if the output contains fzf error
+if echo "$SELECTED_BRANCH" | grep -qi "fzf.*not.*installed\|Error.*fzf"; then
+    echo "ERROR: fzf is not installed or not working"
+    cd - >/dev/null
+    rm -rf "$TEST_REPO"
+    exit 1
+fi
+
 if [ -z "$SELECTED_BRANCH" ]; then
     # Empty output is OK (fzf aborted), but verify no git errors
     BRANCH_ERROR=$(cd "$TEST_REPO" && bash "$BRANCH_SCRIPT" 2>&1 <<< "" || true)
@@ -88,6 +96,14 @@ echo "✓ Commits script exists and is executable"
 # Test that commits script lists commits correctly
 # Use fzf in filter mode to automate selection
 SELECTED_COMMIT=$(cd "$TEST_REPO" && bash "$COMMITS_SCRIPT" 2>&1 <<< "First" || true)
+
+# Check if the output contains fzf error
+if echo "$SELECTED_COMMIT" | grep -qi "fzf.*not.*installed\|Error.*fzf"; then
+    echo "ERROR: fzf is not installed or not working"
+    cd - >/dev/null
+    rm -rf "$TEST_REPO"
+    exit 1
+fi
 
 if [ -z "$SELECTED_COMMIT" ]; then
     # Empty output is OK (fzf aborted), but verify no git errors

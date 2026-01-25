@@ -9,12 +9,9 @@ LOCK_MODE=$(tmux display-message -p -t "$PANE_ID" "#{@lock_mode}")
 
 # If locked, show only unlock hint
 if [ "$LOCK_MODE" = "1" ]; then
-    echo "#[fg=colour244]Ctrl+ [#[fg=colour220]g:unlock#[fg=colour244]]"
+    echo "#[fg=colour244]Ctrl+ [#[fg=colour220]l:unlock#[fg=colour244]]"
     exit 0
 fi
-
-# Get current key table
-KEY_TABLE=$(tmux display-message -p -t "$PANE_ID" "#{client_key_table}")
 
 case "$KEY_TABLE" in
   session)
@@ -39,6 +36,6 @@ case "$KEY_TABLE" in
     ;;
   *)
     # Root mode: Show all modes with single Ctrl+ prefix
-    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour220]g:lock#[fg=colour244]]"
+    echo "#[fg=colour244]Ctrl+ [#[fg=colour51]o#[default]:#[fg=colour51]sessions#[fg=colour244] | #[fg=colour46]t#[default]:#[fg=colour46]tabs#[fg=colour244] | #[fg=colour81]p#[default]:#[fg=colour81]panes#[fg=colour244] | #[fg=colour81]h#[default]:#[fg=colour81]move#[fg=colour244] | #[fg=colour81]n#[default]:#[fg=colour81]resize#[fg=colour244] | #[fg=colour220]l:lock#[fg=colour244]]"
     ;;
 esac

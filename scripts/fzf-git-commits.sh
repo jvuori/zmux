@@ -19,18 +19,29 @@ list_commits() {
         -100
 }
 
-# Use fzf to select commit
-# Preview shows full commit details
-SELECTED=$(list_commits 2>/dev/null | \
-    fzf \
-        --header="Select git commit (Ctrl+c to cancel)" \
-        --reverse \
-        --height=100% \
-        --ansi \
-        --preview='git show --color=always {1} | head -50' \
-        --preview-window=right:60% \
-        --bind 'ctrl-c:abort' \
-        2>/dev/tty)
+# Check if stdin is a pipe (for automated testing)
+if [ ! -t 0 ]; then
+    # Running in automated/piped mode - use fzf filter mode
+    SELECTED=$(list_commits 2>/dev/null | \
+        fzf \
+            --filter="$(cat)" \
+            --no-multi \
+            --exit-0 \
+            2>/dev/null | head -1)
+else
+    # Use fzf to select commit
+    # Preview shows full commit details
+    SELECTED=$(list_commits 2>/dev/null | \
+        fzf \
+            --header="Select git commit (Ctrl+c to cancel)" \
+            --reverse \
+            --height=100% \
+            --ansi \
+            --preview='git show --color=always {1} | head -50' \
+            --preview-window=right:60% \
+            --bind 'ctrl-c:abort' \
+            2>/dev/tty)
+fi
 
 EXIT_CODE=$?
 

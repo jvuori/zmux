@@ -131,12 +131,18 @@ fi
 echo "✓ Resize mode configured"
 
 # Test git mode (Ctrl+g)
-if ! grep -q "bind.*-T git.*git-branch-popup" "$HOME/.config/tmux/keybindings.conf"; then
+# Handle multiline bindings by checking for the mode and then the script names
+if ! grep -q "bind -T git" "$HOME/.config/tmux/keybindings.conf"; then
+    echo "ERROR: Git mode not defined"
+    exit 1
+fi
+
+if ! grep -q "git-branch-popup" "$HOME/.config/tmux/keybindings.conf"; then
     echo "ERROR: Git mode missing branch selection binding"
     exit 1
 fi
 
-if ! grep -q "bind.*-T git.*git-commits-popup" "$HOME/.config/tmux/keybindings.conf"; then
+if ! grep -q "git-commits-popup" "$HOME/.config/tmux/keybindings.conf"; then
     echo "ERROR: Git mode missing commits selection binding"
     exit 1
 fi

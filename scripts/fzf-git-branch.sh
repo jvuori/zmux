@@ -50,18 +50,29 @@ list_branches() {
         }'
 }
 
-# Use fzf to select branch with inline preview
-# Explicitly redirect to ensure proper I/O in tmux popup context
-SELECTED=$(list_branches 2>/dev/null | \
-    fzf \
-        --header="Select git branch (Ctrl+c to cancel)" \
-        --reverse \
-        --height=100% \
-        --ansi \
-        --preview='git log $(echo {} | sed "s/^[* ][[:space:]]*//") --oneline -5 2>/dev/null | awk "{ printf \"  %s\n\", \$0 }"' \
-        --preview-window=bottom:5 \
-        --bind 'ctrl-c:abort' \
-        2>/dev/tty)
+# Check if stdin is a pipe (for automated testing)
+if [ ! -t 0 ]; then
+    # Running in automated/piped mode - use fzf filter mode
+    SELECTED=$(list_branches 2>/dev/null | \
+        fzf \
+            --filter="$(cat)" \
+            --no-multi \
+            --exit-0 \
+            2>/dev/null | head -1)
+else
+    # Use fzf to select branch with inline preview
+    # Explicitly redirect to ensure proper I/O in tmux popup context
+    SELECTED=$(list_branches 2>/dev/null | \
+        fzf \
+            --header="Select git branch (Ctrl+c to cancel)" \
+            --reverse \
+            --height=100% \
+            --ansi \
+            --preview='git log $(echo {} | sed "s/^[* ][[:space:]]*//") --oneline -5 2>/dev/null | awk "{ printf \"  %s\n\", \$0 }"' \
+            --preview-window=bottom:5 \
+            --bind 'ctrl-c:abort' \
+            2>/dev/tty)
+fi
 
 EXIT_CODE=$?
 

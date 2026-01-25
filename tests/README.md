@@ -71,6 +71,7 @@ Verifies that:
 - Commit selection returns valid commit SHAs
 
 **Automation**: Fully automated - scripts support both interactive and automated modes
+
 - Scripts detect piped input and use fzf `--filter` mode for testing
 - Test provides search terms via stdin to simulate user selection
 - No interactive user input required
@@ -103,21 +104,25 @@ See `.github/workflows/test.yml` for the GitHub Actions configuration.
 All tests are **fully automated** and require no user interaction:
 
 **test-installation.sh**
+
 - Runs the installer script non-interactively
 - Verifies all files and dependencies are installed
 
 **test-modes.sh**
+
 - Verifies configuration files in headless environment
 - Falls back to config file parsing when tmux unavailable
 - No interactive tmux sessions required
 
 **test-git-operations.sh**
+
 - Git scripts support both interactive and automated modes
 - Detects piped input (`[ ! -t 0 ]`) to activate test mode
 - In test mode: Uses fzf `--filter` to match search terms from stdin
 - In interactive mode: Full UI with previews and key bindings
 
 **test-scripts.sh**
+
 - Static validation of syntax, permissions, and structure
 - No runtime execution required
 
@@ -126,12 +131,14 @@ All tests are **fully automated** and require no user interaction:
 The git operation scripts (`fzf-git-branch.sh`, `fzf-git-commits.sh`) are designed to work in both modes:
 
 **Interactive Mode** (user usage)
+
 ```bash
 # Direct execution: Full fzf UI with previews and keybindings
 ./scripts/fzf-git-branch.sh
 ```
 
 **Automated Mode** (testing)
+
 ```bash
 # Piped input: fzf --filter mode for automated selection
 echo "search_term" | ./scripts/fzf-git-branch.sh

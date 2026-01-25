@@ -35,19 +35,22 @@ PANE-SPECIFIC MODES
 
 GIT OPERATIONS  (Ctrl+g, [subcommand])
 
-  Ctrl+g, b     Git branch     - Fuzzy search and checkout/switch branches
+  Ctrl+g, b     Git branch     - Insert branch name into command line
   
   Notes:
     - Git operations open fzf for interactive selection
+    - Selected branch name is inserted at cursor (doesn't execute)
     - Type the branch name to filter
-    - Press Enter to select
-    - Use in root mode to operate on git repository
+    - Press Enter to select and insert
+    - Useful for: git checkout, git merge, git rebase, etc.
 
   Example workflow:
-    $ git checkout [Enter]
-    > Ctrl+g, b
+    $ git checkout [Ctrl+g, b]
     > [fzf opens showing all branches]
     > Type to find: "feat"
+    > Press Enter
+    > $ git checkout feature/new-api [cursor here]
+    > [Type additional args or hit Enter to execute]
     > [Press Enter to checkout branch]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

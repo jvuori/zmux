@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ctrl+g is now available for git operations with fzf integration. This feature allows you to fuzzy search and interact with git branches directly from the command line.
+Ctrl+g is now available for git operations with fzf integration. This feature allows you to fuzzy search and insert git branches directly into your command line without executing them immediately.
 
 ## Features
 
@@ -12,10 +12,12 @@ Lists all remote branches (without `origin/` prefix) for easy fuzzy searching.
 
 **Usage:**
 ```bash
+# Type a git command and use Ctrl+g, b to insert a branch name
 $ git checkout [Ctrl+g, b]
 > [fzf opens with all branches]
 > Type to filter: "feature"
-> [Press Enter to checkout]
+> [Press Enter to insert branch name]
+$ git checkout feature/new-api [cursor here - you can add more args]
 ```
 
 **Features:**
@@ -23,39 +25,41 @@ $ git checkout [Ctrl+g, b]
 - Filters by typing branch name
 - Shows 5 recent commits on selected branch
 - Current branch marked with `*`
-- Supports checkout, delete (extensible for future operations)
+- Inserts branch name into command line (no execution)
+- Works with any git command: checkout, merge, rebase, delete, etc.
 
 ## Implementation Details
 
 ### Files Added
 
 - **scripts/fzf-git-branch.sh** - Main git branch selector script
-  - Takes action as parameter: `checkout` (default) or `delete`
   - Lists branches with git log preview
-  - Handles branch switching and deletion
-  - Color-coded output (red=error, green=success, blue=action, yellow=warning)
+  - Outputs selected branch name to stdout
+  - Outputs only the branch name (no newline) for clean insertion
+  - Color-coded error messages
 
 ### Files Modified
 
 - **setup-shell.sh** - Adds Ctrl+g keybinding configuration
   - Bash: Uses `bind -x` to bind Ctrl+g to git menu
   - Zsh: Uses `zle -N` and `bindkey` for widget integration
-  - Supports both single key (`Ctrl+g`) and two-key sequences (e.g., `Ctrl+g, b`)
+  - Reads next character to determine subcommand (e.g., 'b' for branch)
+  - Uses LBUFFER (zsh) or printf (bash) to insert selected text
 
 - **install.sh** - Includes fzf-git-branch.sh in installation
-- **update.sh** - Includes fzf-git-branch.sh in updates
+- **update.sh** - Includes fzf-git-branch.sh in updates and calls setup-shell.sh
 
 - **get-mode-help.sh** - Status bar hint updated
   - Shows `Ctrl+g:git` in root mode help
   - Color: magenta (colour200)
 
 - **show-help.sh** - Help documentation updated
-  - Added Git Operations section with usage examples
-  - Shows `Ctrl+g, b` keybinding
+  - Git Operations section with new insertion-based workflow
+  - Shows example with multiple command types
 
 - **README.md** - User documentation updated
-  - Clarified lock mode is now Ctrl+l (was Ctrl+g)
-  - Added Git Operations section with workflow example
+  - Explains Ctrl+g, b for branch insertion
+  - Shows example workflow
 
 ## How It Works
 
@@ -64,15 +68,15 @@ $ git checkout [Ctrl+g, b]
 When you source the shell config (from `setup-shell.sh`):
 
 1. **Zsh** (preferred):
-   - Creates a zle widget `_zmux_git_operation`
+   - Creates a zle widget `_zmux_git_menu`
    - Binds `Ctrl+g` to this widget
-   - Widget reads the next character (e.g., 'b') with 0.5 second timeout
-   - Executes corresponding operation script
+   - Widget reads the next character (e.g., 'b') with 2 second timeout
+   - Calls the script and inserts output into LBUFFER (current command line)
 
 2. **Bash**:
-   - Uses `bind -x` to execute function on Ctrl+g
-   - Function reads one character with timeout
-   - Executes corresponding operation script
+   - Uses `bind -x` to bind Ctrl+g to git menu function
+   - Function reads one character with 2 second timeout
+   - Calls the script and inserts output into the current line
 
 ### Script Execution
 
@@ -82,20 +86,44 @@ When you source the shell config (from `setup-shell.sh`):
 2. Checks if fzf is installed
 3. Lists all remote branches (removing `origin/` prefix)
 4. Opens fzf with preview showing recent commits
-5. On selection, performs the action (checkout, delete, etc.)
-6. Provides visual feedback with colors
+5. On selection, outputs the branch name (no newline)
+6. Output is inserted into the current command line by the widget
+
+## Usage Examples
+
+### Basic branch checkout
+```bash
+$ git checkout [Ctrl+g, b]
+> feature/login [Enter]
+$ git checkout feature/login [cursor here]
+```
+
+### Merge a branch
+```bash
+$ git merge [Ctrl+g, b]
+> bugfix/header [Enter]
+$ git merge bugfix/header [cursor here]
+```
+
+### Rebase workflow
+```bash
+$ git rebase -i [Ctrl+g, b]
+> main [Enter]
+$ git rebase -i main [cursor here]
+```
 
 ## Future Extensions
 
-The architecture supports easy addition of new git operations:
+The architecture supports easy addition of new git operations by creating new scripts:
 
 ```bash
-# Add to shell config (setup-shell.sh):
+# Example: Add Ctrl+g, s for stash operations
+# Create scripts/fzf-git-stash.sh that outputs stash name
+# Update setup-shell.sh:
 case "$op" in
-    b) ~/.config/tmux/scripts/fzf-git-branch.sh checkout ;;
+    b) ~/.config/tmux/scripts/fzf-git-branch.sh ;;
     s) ~/.config/tmux/scripts/fzf-git-stash.sh ;;      # Future
-    l) ~/.config/tmux/scripts/fzf-git-log.sh ;;        # Future
-    *) echo "Unknown git operation: $op" ;;
+    *) ;;
 esac
 ```
 

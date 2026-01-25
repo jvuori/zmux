@@ -144,15 +144,15 @@ This is zmux's implementation of Zellij's "Lock mode" and solves the problem whe
 
 ### Git Operations
 
-- **Git menu**: `Ctrl+g` - Git operations with fzf integration
-  - `Ctrl+g, b` - Fuzzy search and checkout git branches (requires fzf)
+- **Git branch**: `Ctrl+g, b` - Insert branch name into command line (requires fzf)
 
 Example workflow:
 ```bash
-$ git checkout [press Ctrl+g, b]
-> [fzf opens with all branches]
+$ git checkout [Ctrl+g, b]
+> [fzf opens with branches]
 > Type to filter: "feature"
-> [Press Enter to checkout]
+> [Press Enter to insert branch name]
+$ git checkout feature/new-api [cursor here]
 ```
 
 ### Modes

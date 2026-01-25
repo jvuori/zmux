@@ -108,14 +108,23 @@ _zmux_setup_git_bash() {
     if command -v fzf >/dev/null 2>&1 && [ -x "$HOME/.config/tmux/scripts/fzf-git-branch.sh" ]; then
         # Define git operation menu
         _git_operation() {
-            read -t 0.5 -n 1 op
+            read -t 2 -n 1 op
             case "$op" in
-                b) ~/.config/tmux/scripts/fzf-git-branch.sh checkout ;;
-                *) echo "Unknown git operation: $op" ;;
+                b)
+                    # Call the script to get selected branch
+                    local result=$($HOME/.config/tmux/scripts/fzf-git-branch.sh)
+                    if [ -n "$result" ]; then
+                        # Insert the result into the command line
+                        printf "%s" "$result"
+                    fi
+                    ;;
+                *)
+                    # Do nothing for unknown operations
+                    ;;
             esac
         }
         # Bind Ctrl+g to show git menu (requires second key)
-        bind -x '"\C-g": _git_operation'
+        bind -x '"\\C-g": _git_operation'
     fi
 }
 _zmux_setup_git_bash
@@ -172,23 +181,51 @@ _zmux_configure_fzf() {
     fi
 }
 
-# Git operations with Ctrl+g prefix (zsh)
-# Ctrl+g, b: Git branch (fuzzy search with fzf)
+# Git operations with Ctrl+g (zsh)
+# Ctrl+g: Git branch fuzzy search with fzf
 _zmux_configure_git_zsh() {
     if command -v fzf >/dev/null 2>&1 && [ -x "$HOME/.config/tmux/scripts/fzf-git-branch.sh" ]; then
         {
-            # Define git operation menu widget
-            _zmux_git_operation() {
-                local op
-                read -k op 2>/dev/null
+            # Widget for git operations (Ctrl+g prefix)
+            _zmux_git_menu() {
+                # Read the next character (b for branch, etc.)
+                # Use 2 second timeout to allow for slow terminal response
+                read -t 2 -k 1 op
+                if [ -z "$op" ]; then
+                    # Timeout: no operation specified, just reset
+                    zle reset-prompt
+                    return 0
+                fi
                 case "$op" in
-                    b) ~/.config/tmux/scripts/fzf-git-branch.sh checkout ;;
-                    *) echo "Unknown git operation: $op" ;;
+                    b)
+                        # Save the current buffer state
+                        local saved_buffer="$BUFFER"
+                        local saved_cursor="$CURSOR"
+                        
+                        # Execute script and capture result
+                        local result
+                        result=$($HOME/.config/tmux/scripts/fzf-git-branch.sh)
+                        local ret=$?
+                        
+                        # Restore buffer (in case fzf messed with it)
+                        BUFFER="$saved_buffer"
+                        CURSOR="$saved_cursor"
+                        
+                        # Only insert if selection was made
+                        if [ $ret -eq 0 ] && [ -n "$result" ]; then
+                            # Insert at cursor position
+                            LBUFFER="${LBUFFER}${result}"
+                        fi
+                        ;;
+                    *)
+                        # Do nothing for unknown operations
+                        ;;
                 esac
+                zle reset-prompt
             }
-            zle -N _zmux_git_operation
-            # Bind Ctrl+g to git menu
-            bindkey '^G' _zmux_git_operation
+            zle -N _zmux_git_menu
+            # Bind Ctrl+g to the menu (Ctrl+g, b for branches)
+            bindkey '^G' _zmux_git_menu
         } >/dev/null 2>&1
     fi
 }

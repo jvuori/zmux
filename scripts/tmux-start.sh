@@ -11,14 +11,29 @@ if [ -n "$TMUX" ]; then
     exit $?
 fi
 
-# Start tmux server (continuum will auto-restore if configured)
-# This ensures continuum restore happens before we check for sessions
+# Start tmux server (this loads tmux.conf which loads plugins)
 tmux start-server 2>/dev/null || true
-
-# Wait a moment for continuum restore to complete (if it's restoring)
 sleep 0.5
 
-# Check if there are any existing sessions
+# Source the config explicitly to ensure tmux-continuum is loaded
+# This is important for auto-restore to trigger
+if [ -f ~/.tmux.conf ]; then
+    tmux source-file ~/.tmux.conf 2>/dev/null || true
+fi
+
+# Wait for continuum restore to complete
+# Check every 0.1s for up to 10 seconds, until sessions appear or timeout
+for i in {1..100}; do
+    EXISTING_SESSIONS=$(tmux list-sessions 2>/dev/null)
+    if [ -n "$EXISTING_SESSIONS" ]; then
+        # Give continuum a tiny bit more time to finish restore
+        sleep 0.2
+        break
+    fi
+    sleep 0.1
+done
+
+# Final check for sessions after potential restore
 EXISTING_SESSIONS=$(tmux list-sessions 2>/dev/null)
 
 if [ -z "$EXISTING_SESSIONS" ]; then

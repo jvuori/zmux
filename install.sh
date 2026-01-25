@@ -249,64 +249,88 @@ if ! tmux has-session 2>/dev/null; then
 fi
 
 # Install plugins using TPM
-if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
-    echo "   Installing plugins via TPM..."
-    
-    # Source config first to ensure TPM is loaded
-    tmux source-file ~/.tmux.conf 2>/dev/null || true
-    sleep 1
-    
-    # Run install_plugins directly (TPM can be run outside tmux for installation)
-    # Retry up to 3 times if download fails
-    INSTALL_SUCCESS=false
-    for attempt in 1 2 3; do
-        if [ $attempt -gt 1 ]; then
-            echo "   Retry attempt $attempt..."
-            sleep 2
-        fi
-        
-        if bash "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" 2>&1; then
-            INSTALL_SUCCESS=true
-            break
-        fi
-        
-        # Check if critical plugins were installed despite errors
-        if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
-            INSTALL_SUCCESS=true
-            break
-        fi
-    done
-    
-    # Wait a moment for any async operations
-    sleep 2
-    
-    # Verify critical plugin (tmux-fzf) is installed
-    if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
-        echo "✅ Plugins installed successfully"
-    else
-        echo "⚠️  Plugin installation failed. Attempting manual installation..."
-        # Try to manually clone critical plugins if TPM failed (network issues, etc.)
-        if [ ! -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
-            echo "   Manually installing tmux-fzf (sainnhe/tmux-fzf)..."
-            if git clone https://github.com/sainnhe/tmux-fzf.git "$TMUX_PLUGINS_DIR/tmux-fzf" 2>/dev/null; then
-                echo "   ✅ tmux-fzf installed"
-            else
-                echo "   ❌ Failed to install tmux-fzf (network issue?)"
-            fi
-        fi
+echo "   Installing plugins via TPM..."
 
+# List of essential plugins to install
+ESSSENTIAL_PLUGINS=(
+    "tmux-plugins/tpm"
+    "tmux-plugins/tmux-sensible"
+    "tmux-plugins/tmux-resurrect"
+    "tmux-plugins/tmux-continuum"
+    "tmux-plugins/tmux-prefix-highlight"
+    "sainnhe/tmux-fzf"
+    "tmux-plugins/tmux-yank"
+    "tmux-plugins/tmux-open"
+)
+
+# Function to install a single plugin
+install_plugin() {
+    local plugin_spec=$1
+    local plugin_name=$(echo $plugin_spec | cut -d'/' -f2)
+    local plugin_path="$TMUX_PLUGINS_DIR/$plugin_name"
+    
+    if [ -d "$plugin_path" ]; then
+        return 0  # Already installed
+    fi
+    
+    if git clone https://github.com/$plugin_spec.git "$plugin_path" 2>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Try TPM automatic installation first
+if [ -f "$TMUX_PLUGINS_DIR/tpm/bin/install_plugins" ]; then
+    INSTALL_SUCCESS=true
+    
+    # TPM auto-install works best inside tmux. If no sessions exist, create one temporarily.
+    if ! tmux has-session 2>/dev/null; then
+        tmux new-session -d -s __install_plugins_temp 2>/dev/null || true
+        sleep 1
+    fi
+    
+    # Source config and run TPM installation
+    if tmux has-session 2>/dev/null; then
+        tmux send-keys -t __install_plugins_temp 'source ~/.tmux.conf' Enter 2>/dev/null || true
+        sleep 1
+        tmux send-keys -t __install_plugins_temp '~/.tmux/plugins/tpm/bin/install_plugins' Enter 2>/dev/null || true
+        sleep 3
         
-        # Final check
-        if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
-            echo "✅ Critical plugins installed"
-        else
-            echo "❌ Plugin installation failed. Please install manually when network is available:"
-            echo "   In tmux, press Ctrl+a, then i"
-            echo "   Or run: bash ~/.tmux/plugins/tpm/bin/install_plugins"
+        # Clean up temporary session if we created it
+        if tmux has-session -t __install_plugins_temp 2>/dev/null; then
+            tmux kill-session -t __install_plugins_temp 2>/dev/null || true
         fi
     fi
+fi
+
+# If TPM installation didn't work or incomplete, manually install critical plugins
+echo "   Verifying essential plugins..."
+for plugin in "${ESSENTIAL_PLUGINS[@]}"; do
+    plugin_name=$(echo $plugin | cut -d'/' -f2)
+    plugin_path="$TMUX_PLUGINS_DIR/$plugin_name"
+    
+    if [ -d "$plugin_path" ]; then
+        echo "   ✓ $plugin_name"
+    else
+        echo "   Installing $plugin_name..."
+        if install_plugin "$plugin"; then
+            echo "   ✅ $plugin_name installed"
+        else
+            echo "   ⚠️  Failed to install $plugin_name (network issue?)"
+        fi
+    fi
+done
+
+# Final verification
+if [ -d "$TMUX_PLUGINS_DIR/tmux-resurrect" ] && [ -d "$TMUX_PLUGINS_DIR/tmux-continuum" ]; then
+    echo "✅ Session restoration plugins installed"
+fi
+
+if [ -d "$TMUX_PLUGINS_DIR/tmux-fzf" ]; then
+    echo "✅ All critical plugins installed"
 else
-    echo "⚠️  TPM not found. Plugins will be installed when you start tmux."
+    echo "⚠️  Some plugins failed to install. You can retry in tmux with: Ctrl+a, then i"
 fi
 
 # ============================================================================

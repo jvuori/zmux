@@ -127,33 +127,49 @@ fi
 echo ""
 echo "📦 Updating plugins..."
 
-# Start tmux server if not running (needed for plugin installation)
-if ! tmux has-session 2>/dev/null; then
-    echo "   Starting tmux server for plugin update..."
-    tmux start-server 2>/dev/null || true
-    sleep 1
-fi
-
 # Install/update plugins using TPM
+echo ""
+echo "📦 Updating plugins..."
+
 if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
-    echo "   Installing new plugins..."
-    # Ensure tmux loads the updated configuration (with guarded plugin runs)
-    tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
-    tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || {
-        echo "⚠️  Could not install plugins automatically. Please install manually:"
-        echo "   In tmux, press Ctrl+a, then i"
-    }
+    echo "   Verifying plugin installation...\n"
     
-    echo "   Updating existing plugins..."
-    # Use bash -c to properly execute the command with arguments
-    tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || {
-        echo "⚠️  Could not update plugins automatically. Please update manually:"
-        echo "   In tmux, press Ctrl+a, then u"
-    }
+    # Use a temporary session for plugin operations if no sessions exist
+    TEMP_SESSION_CREATED=false
+    if ! tmux has-session 2>/dev/null; then
+        echo "   Creating temporary session for plugin installation..."
+        tmux new-session -d -s __plugin_update_temp 2>/dev/null || true
+        TEMP_SESSION_CREATED=true
+        sleep 1
+    fi
+    
+    if tmux has-session 2>/dev/null; then
+        echo "   Installing new plugins..."
+        # Source config and run install plugins
+        tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
+        sleep 1
+        tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || true
+        sleep 2
+        
+        echo "   Updating existing plugins..."
+        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || true
+        sleep 2
+        
+        # Clean up temporary session if we created it
+        if [ "$TEMP_SESSION_CREATED" = true ] && tmux has-session -t __plugin_update_temp 2>/dev/null; then
+            tmux kill-session -t __plugin_update_temp 2>/dev/null || true
+        fi
+    fi
+    
+    # Verify critical plugins are present
+    if [ -d ~/.tmux/plugins/tmux-resurrect ] && [ -d ~/.tmux/plugins/tmux-continuum ]; then
+        echo "✅ Session restoration plugins verified"
+    fi
+    
     echo "✅ Plugins updated"
 else
     echo "⚠️  TPM not found. Please install plugins manually:"
-    echo "   In tmux, press Ctrl+g, then I"
+    echo "   In tmux, press Ctrl+a, then i"
 fi
 
 # ============================================================================

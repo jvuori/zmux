@@ -16,7 +16,7 @@ MAIN MODES (Always available - shown in status bar)
 COMMON ACTIONS (Same across Session, Tab, and Pane modes)
 
   Action        Sessions    Tabs         Panes
-  ─────────────────────────────────────────────
+  ───────────────────────────────────────────────────
   New           Ctrl+o, n   Ctrl+t, n    Ctrl+p, n
   Rename        Ctrl+o, r   Ctrl+t, r   
   Kill          Ctrl+o, x   Ctrl+t, x    Ctrl+p, x
@@ -34,10 +34,17 @@ PANE-SPECIFIC MODES
 
 NAVIGATION
 
-  Arrow Keys        Navigate (panes, tabs in their modes)
-  Alt + Arrow Keys  Quick pane navigation in root mode
-    Alt+←           Move left          Alt+→  Move right
-    Alt+↑           Move up            Alt+↓  Move down
+  Arrow Keys              Navigate (panes, tabs in their modes)
+  
+  Ctrl + Arrow Keys       Quick tab switching in root mode
+    Ctrl+←                Previous tab
+    Ctrl+→                Next tab
+  
+  Alt + Arrow Keys        Quick pane navigation in root mode
+    Alt+←                 Navigate to left
+    Alt+→                 Navigate to right
+    Alt+↑                 Navigate to up            
+    Alt+↓                 Navigate to down
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

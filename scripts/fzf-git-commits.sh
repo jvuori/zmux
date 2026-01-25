@@ -3,6 +3,21 @@
 # Lists commits with SHA, date, and message
 # Outputs selected commit SHA
 
+# Source bashrc to get proper PATH in WSL/tmux popups
+if [ -f "$HOME/.bashrc" ]; then
+    source "$HOME/.bashrc" 2>/dev/null || true
+fi
+
+# Check if fzf is installed (with fallback paths for WSL)
+if ! command -v fzf >/dev/null 2>&1; then
+    if [ -f "$HOME/.fzf/bin/fzf" ]; then
+        export PATH="$HOME/.fzf/bin:$PATH"
+    else
+        echo "Error: fzf is not installed" >&2
+        exit 1
+    fi
+fi
+
 # Get current branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 

@@ -11,6 +11,11 @@
 # This script outputs the selected branch name to stdout,
 # suitable for insertion into a command line.
 
+# Source bashrc to get proper PATH in WSL/tmux popups
+if [ -f "$HOME/.bashrc" ]; then
+    source "$HOME/.bashrc" 2>/dev/null || true
+fi
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -24,11 +29,15 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
     exit 1
 fi
 
-# Check if fzf is installed
+# Check if fzf is installed (with fallback paths for WSL)
 if ! command -v fzf >/dev/null 2>&1; then
-    echo -e "${RED}Error: fzf is not installed${NC}" >&2
-    echo "Please install fzf: https://github.com/junegunn/fzf#installation" >&2
-    exit 1
+    if [ -f "$HOME/.fzf/bin/fzf" ]; then
+        export PATH="$HOME/.fzf/bin:$PATH"
+    else
+        echo -e "${RED}Error: fzf is not installed${NC}" >&2
+        echo "Please install fzf: https://github.com/junegunn/fzf#installation" >&2
+        exit 1
+    fi
 fi
 
 # Get current branch

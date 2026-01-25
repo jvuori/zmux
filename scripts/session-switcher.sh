@@ -26,11 +26,16 @@ fi
 # Ensure PATH includes common fzf locations
 export PATH="$HOME/.fzf/bin:$HOME/.local/bin:$PATH"
 
+# Get the current session
+# Accept as first argument (passed from tmux binding), otherwise query tmux
+if [ -n "$1" ]; then
+    CURRENT_SESSION="$1"
+else
+    CURRENT_SESSION=$(tmux display-message -p "#S" 2>/dev/null)
+fi
+
 # Get the last active session (previously active session)
 LAST_SESSION=$(tmux display-message -p "#{client_last_session}" 2>/dev/null)
-
-# Get current session (to exclude it from the list)
-CURRENT_SESSION=$(tmux display-message -p "#S" 2>/dev/null)
 
 # Get all sessions
 ALL_SESSIONS=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
@@ -64,6 +69,7 @@ build_session_list() {
     
     # Debug: Check if temp file exists and has content
     if [ ! -f "$temp_file" ] || [ ! -s "$temp_file" ]; then
+        echo ""  # Output empty string instead of silent return
         return
     fi
     
@@ -245,6 +251,8 @@ fi
 KILL_EOF
 chmod +x "$KILL_SCRIPT"
 
+chmod +x "$KILL_SCRIPT"
+
 # Try fzf-tmux first (best option), fallback to regular fzf
 if [ -n "$FZF_TMUX_CMD" ]; then
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 70%,60% \
@@ -265,6 +273,7 @@ else
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
         --bind 'enter:accept' \
+        --bind 'ctrl-r:execute('"$RENAME_SCRIPT"' {})+abort' \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
         --bind 'ctrl-c:abort' \
         2>/dev/null)

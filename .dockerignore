@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+
+# Documentation (not needed for tests)
+*.md
+!tests/README.md
+
+# Test artifacts
+tests/*.log
+
+# IDE
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db

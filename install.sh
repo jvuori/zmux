@@ -63,6 +63,7 @@ echo "📁 Creating configuration directory..."
 mkdir -p "$TMUX_CONFIG_DIR"
 mkdir -p "$TMUX_CONFIG_DIR/modes"
 mkdir -p "$TMUX_CONFIG_DIR/scripts"
+mkdir -p "$HOME/.tmux/resurrect"
 echo "✅ Configuration directory created: $TMUX_CONFIG_DIR"
 
 # ============================================================================

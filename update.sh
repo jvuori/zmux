@@ -41,6 +41,7 @@ echo "📋 Updating configuration files..."
 mkdir -p "$TMUX_CONFIG_DIR"
 mkdir -p "$TMUX_CONFIG_DIR/modes"
 mkdir -p "$TMUX_CONFIG_DIR/scripts"
+mkdir -p "$HOME/.tmux/resurrect"
 
 # Copy main config files
 cp "$SCRIPT_DIR/tmux/tmux.conf" "$TMUX_CONFIG_DIR/tmux.conf"

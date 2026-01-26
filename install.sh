@@ -262,7 +262,7 @@ fi
 echo "   Installing plugins via TPM..."
 
 # List of essential plugins to install
-ESSSENTIAL_PLUGINS=(
+ESSENTIAL_PLUGINS=(
     "tmux-plugins/tpm"
     "tmux-plugins/tmux-sensible"
     "tmux-plugins/tmux-resurrect"

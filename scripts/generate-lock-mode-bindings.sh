@@ -119,7 +119,17 @@ for key in "${UNIQUE_KEYS[@]}"; do
         "C-z") continue ;;  # Suspend
     esac
     
-    echo "bind -T locked '$key' send-keys '$key' \\; switch-client -T locked"
+    # Handle special quoting for single and double quotes
+    if [ "$key" = "'" ]; then
+        # Single quote: use double quotes to wrap
+        echo "bind -T locked \"'\" send-keys \"'\" \\; switch-client -T locked"
+    elif [ "$key" = '"' ]; then
+        # Double quote: use single quotes to wrap
+        echo "bind -T locked '\"' send-keys '\"' \\; switch-client -T locked"
+    else
+        # All other keys: use single quotes
+        echo "bind -T locked '$key' send-keys '$key' \\; switch-client -T locked"
+    fi
 done
 
 echo ""

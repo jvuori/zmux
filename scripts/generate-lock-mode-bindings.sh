@@ -59,8 +59,9 @@ for num in {0..9}; do
     ALL_KEYS+=("M-$num")
 done
 
-# 6. Function keys F1-F20 (most terminals support these)
-for fn in {1..20}; do
+# 6. Function keys F1-F12 (most terminals support these)
+# F13-F20 are not universally supported and cause "unknown key" warnings on startup
+for fn in {1..12}; do
     ALL_KEYS+=("F$fn")
     ALL_KEYS+=("S-F$fn")      # Shift+Fn
     ALL_KEYS+=("C-F$fn")      # Ctrl+Fn

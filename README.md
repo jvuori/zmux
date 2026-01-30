@@ -31,12 +31,30 @@ cd zmux
 
 ### Automatic Session Restoration
 
-zmux includes a smart session starter that:
+zmux includes:
 
-- **Restores the last active session** if sessions exist
-- **Creates a new "default" session** if no sessions exist
+1. **Systemd service** - Automatically starts tmux at login with all sessions restored
+2. **Smart session starter** - `tmux-start.sh` script that intelligently handles restoration
 
-To use it, you can either:
+#### Systemd Auto-Start (Recommended)
+
+The `install.sh` script sets up a systemd service that:
+
+- Starts tmux automatically at login
+- Restores all previous sessions in the background
+- When you open a terminal, your session appears instantly (no delay!)
+
+See [docs/SYSTEMD_SETUP.md](docs/SYSTEMD_SETUP.md) for details and troubleshooting.
+
+To verify the setup:
+
+```bash
+./verify-systemd.sh
+```
+
+#### Manual Session Restoration
+
+You can also manually restore sessions using the script:
 
 **Option 1: Use the script directly**
 
@@ -51,17 +69,11 @@ Add to your `~/.bashrc` or `~/.zshrc`:
 alias tmux='~/.config/tmux/scripts/tmux-start.sh'
 ```
 
-**Option 3: Create a function (allows passing arguments)**
-Add to your `~/.bashrc` or `~/.zshrc`:
+**Option 3: WezTerm Configuration**
+If using WezTerm, the default config already uses this script:
 
-```bash
-tmux() {
-    if [ "$#" -eq 0 ]; then
-        ~/.config/tmux/scripts/tmux-start.sh "$@"
-    else
-        command tmux "$@"
-    fi
-}
+```lua
+default_prog = { '/bin/bash', '-c', 'exec ~/.config/tmux/scripts/tmux-start.sh' }
 ```
 
 ### Fix Existing Installation

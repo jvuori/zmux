@@ -75,7 +75,10 @@ systemctl --user start tmux.service
 ### Step 5: Verify it's working
 
 ```bash
-# Check service status
+# Quick verification script (from zmux directory)
+./verify-systemd.sh
+
+# Or manually check service status
 systemctl --user status tmux.service
 
 # List tmux sessions (should show "default" and any restored sessions)
@@ -86,16 +89,29 @@ tmux list-sessions
 
 1. **At login**: systemd automatically starts the tmux service
 2. **Service initialization**:
+   - Writes "restoring" to `~/.tmux/daemon-status` status file
    - Creates `~/.tmux/resurrect` directory
    - Creates a "default" session (required for tmux-continuum to work)
    - The default session loads your tmux config and all plugins
    - Tmux-continuum detects saved sessions and automatically restores them
-3. **Session restoration**: All previously saved sessions are restored in the background
-4. **Session activation**: When you open WezTerm:
-   - It connects to the already-running tmux server
-   - Automatically attaches to your most recently active session
-   - All sessions are already restored and ready - no delay!
-   - The default session continues running in the background to keep the server alive
+3. **Session restoration**: Waits for session count to stabilize (up to 30 seconds)
+4. **Completion**: Writes "ready" to status file when restoration is complete
+5. **Session activation**: When you open WezTerm:
+   - `tmux-start.sh` checks if tmux server is running
+   - If "restoring" status, it waits for "ready" before attaching
+   - Once ready, attaches to your most recently active session
+   - All sessions are already restored - no redundant restoration!
+
+### Status File Coordination
+
+The status file `~/.tmux/daemon-status` ensures proper coordination:
+
+| Status      | Meaning                                 |
+| ----------- | --------------------------------------- |
+| `restoring` | Systemd is currently restoring sessions |
+| `ready`     | Restoration complete, safe to attach    |
+
+This prevents race conditions where WezTerm might start its own restoration process.
 
 ## Monitoring and Maintenance
 
@@ -147,7 +163,33 @@ This creates a seamless experience where:
 
 ## Troubleshooting
 
-### Service fails to start
+### Service is disabled or won't enable
+
+**Check if the service is enabled:**
+
+```bash
+systemctl --user is-enabled tmux.service
+```
+
+**If disabled, enable it manually:**
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable tmux.service
+systemctl --user start tmux.service
+```
+
+**Why this might happen during installation:**
+
+The `systemctl --user` commands require an active systemd user session. This is normally started automatically when you log in, but in rare cases it might not be available:
+
+- Running `install.sh` over SSH without a full login session
+- Very minimal Linux installations
+- Custom environments without standard systemd setup
+
+The fix: Just wait for your next graphical login or reboot, then run the enable commands above. After that, it will work automatically.
+
+### Service fails to start or is inactive
 
 Check the logs:
 
@@ -158,7 +200,7 @@ journalctl --user -u tmux.service -n 50
 Common issues:
 
 - **Missing startup script**: Ensure `~/.config/tmux/scripts/systemd-tmux-start.sh` exists and is executable
-- **Syntax error in service file**: Re-check the `[Unit]`, `[Service]`, `[Install]` sections
+- **Syntax error in service file**: Check for typos in `[Unit]`, `[Service]`, `[Install]` sections
 - **tmux binary not found**: Verify with `which tmux`
 
 ### Sessions not being restored

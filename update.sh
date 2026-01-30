@@ -179,12 +179,18 @@ if systemctl --user daemon-reload 2>/dev/null; then
     # Always enable the service (idempotent operation)
     if systemctl --user enable tmux.service 2>/dev/null; then
         echo "✅ Systemd tmux service enabled"
+        echo "ℹ️  Service will use new config on next login"
+    else
+        echo "⚠️  Could not enable service. Try manually:"
+        echo "   systemctl --user enable tmux.service"
     fi
-    # Note: We don't restart the service here to avoid killing user's sessions
-    echo "ℹ️  Service will use new config on next login/restart"
 else
-    echo "⚠️  Could not reload systemd service (systemd user session may not be available)"
-    echo "   Try enabling it: systemctl --user enable tmux.service"
+    echo "⚠️  Could not reload systemd"
+    echo "   This usually means your user systemd session isn't running yet."
+    echo "   Try again after logging out and back in, or reboot your system."
+    echo "   Then run:"
+    echo "   systemctl --user daemon-reload"
+    echo "   systemctl --user enable tmux.service"
 fi
 
 # ============================================================================

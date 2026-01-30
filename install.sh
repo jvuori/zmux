@@ -377,16 +377,38 @@ SYSTEMD_SERVICE
 echo "✅ Created systemd service file: $SYSTEMD_USER_DIR/tmux.service"
 
 # Enable the service
-if systemctl --user daemon-reload 2>/dev/null && \
-   systemctl --user enable tmux.service 2>/dev/null && \
-   systemctl --user start tmux.service 2>/dev/null; then
-    echo "✅ Systemd tmux service enabled and started"
-    echo "   Sessions will now restore automatically at login"
-else
-    echo "⚠️  Could not enable systemd service (systemd user session may not be available)"
-    echo "   You can manually enable it later:"
+echo ""
+echo "🔧 Enabling systemd tmux service..."
+
+if ! systemctl --user daemon-reload 2>/dev/null; then
+    echo "⚠️  Could not reload systemd (user session may not be available)"
+    echo "   Try this after logging out and back in (or after reboot):"
     echo "   systemctl --user daemon-reload"
     echo "   systemctl --user enable tmux.service"
+    SKIP_SERVICE_START=true
+fi
+
+if [ -z "$SKIP_SERVICE_START" ]; then
+    if systemctl --user enable tmux.service 2>/dev/null; then
+        echo "✅ Systemd service enabled (will start at next login)"
+    else
+        echo "⚠️  Could not enable service. Try manually:"
+        echo "   systemctl --user enable tmux.service"
+        SKIP_SERVICE_START=true
+    fi
+fi
+
+if [ -z "$SKIP_SERVICE_START" ]; then
+    if systemctl --user start tmux.service 2>/dev/null; then
+        echo "✅ Systemd service started now"
+        echo ""
+        echo "🎯 Sessions will restore automatically:"
+        echo "   • At login time (systemd starts the service)"
+        echo "   • When you open WezTerm (attaches to restored session)"
+    else
+        echo "⚠️  Could not start service. Try manually:"
+        echo "   systemctl --user start tmux.service"
+    fi
 fi
 
 # ============================================================================
@@ -445,7 +467,8 @@ echo ""
 echo "Next steps:"
 echo "  1. Reload config in existing sessions (see above) or start new tmux: tmux"
 echo "  2. Plugins should be installed automatically (if installation failed, press Ctrl+a, then i)"
-echo "  3. Verify installation: ~/.config/tmux/scripts/doctor.sh"
+echo "  3. Verify systemd setup: ./verify-systemd.sh"
+echo "  4. Verify complete installation: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "Key bindings (after reload):"
 echo "  - Lock/Unlock: Ctrl+a"
@@ -455,9 +478,10 @@ echo "  - Move mode: Ctrl+h (arrow keys move)"
 echo "  - Tab mode: Ctrl+t"
 echo "  - Scroll mode: Ctrl+s"
 echo ""
-echo "For more information, see README.md"
+echo "For more information, see README.md or docs/SYSTEMD_TMUX_SERVICE.md"
 echo ""
 echo "Service monitoring:"
+echo "  ./verify-systemd.sh          # Full verification"
 echo "  systemctl --user status tmux.service"
 echo "  journalctl --user -u tmux.service -f"
 

@@ -63,6 +63,7 @@ echo "📁 Creating configuration directory..."
 mkdir -p "$TMUX_CONFIG_DIR"
 mkdir -p "$TMUX_CONFIG_DIR/modes"
 mkdir -p "$TMUX_CONFIG_DIR/scripts"
+mkdir -p "$HOME/.tmux/resurrect"
 echo "✅ Configuration directory created: $TMUX_CONFIG_DIR"
 
 # ============================================================================
@@ -261,7 +262,7 @@ fi
 echo "   Installing plugins via TPM..."
 
 # List of essential plugins to install
-ESSSENTIAL_PLUGINS=(
+ESSENTIAL_PLUGINS=(
     "tmux-plugins/tpm"
     "tmux-plugins/tmux-sensible"
     "tmux-plugins/tmux-resurrect"

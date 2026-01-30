@@ -4,6 +4,10 @@
 # If no sessions exist, create a new one named "default"
 # Note: tmux-continuum will auto-restore sessions on tmux server start
 
+# Ensure required directories exist (for plugins like tmux-resurrect)
+mkdir -p ~/.tmux/resurrect
+mkdir -p ~/.config/tmux/scripts
+
 # Check if we're already in a tmux session
 if [ -n "$TMUX" ]; then
     # Already in tmux, just run tmux normally

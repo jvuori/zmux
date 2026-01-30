@@ -360,8 +360,6 @@ cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
 [Unit]
 Description=Tmux Session Manager
 Documentation=man:tmux(1)
-After=graphical-session-pre.target
-PartOf=graphical-session.target
 
 [Service]
 Type=simple
@@ -371,10 +369,20 @@ Restart=on-failure
 RestartSec=10
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target
 SYSTEMD_SERVICE
 
 echo "✅ Created systemd service file: $SYSTEMD_USER_DIR/tmux.service"
+
+# Enable user lingering (required for services to persist across reboots)
+echo ""
+echo "🔧 Enabling user lingering for systemd services..."
+if loginctl enable-linger "$USER" 2>/dev/null; then
+    echo "✅ User lingering enabled (services will persist across reboots)"
+else
+    echo "⚠️  Could not enable lingering. Services may not start after reboot."
+    echo "   Try manually: sudo loginctl enable-linger $USER"
+fi
 
 # Enable the service
 echo ""

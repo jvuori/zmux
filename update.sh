@@ -131,7 +131,49 @@ else
 fi
 
 # ============================================================================
-# Step 4: Update plugins
+# Step 4: Update systemd tmux service
+# ============================================================================
+
+echo ""
+echo "🚀 Updating systemd tmux service..."
+
+SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
+mkdir -p "$SYSTEMD_USER_DIR"
+
+cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
+[Unit]
+Description=Tmux Session Manager
+Documentation=man:tmux(1)
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/mkdir -p %h/.tmux
+ExecStartPre=/usr/bin/mkdir -p %h/.tmux/resurrect
+ExecStart=/usr/bin/tmux start-server
+ExecStartPost=/usr/bin/bash -c 'sleep 0.5 && /usr/bin/tmux source-file %h/.tmux.conf'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
+SYSTEMD_SERVICE
+
+echo "✅ Updated systemd service file: $SYSTEMD_USER_DIR/tmux.service"
+
+# Reload and restart the service
+if systemctl --user daemon-reload 2>/dev/null && \
+   systemctl --user restart tmux.service 2>/dev/null; then
+    echo "✅ Systemd tmux service reloaded and restarted"
+else
+    echo "⚠️  Could not reload systemd service (service may not be active)"
+    echo "   Try enabling it: systemctl --user enable tmux.service"
+fi
+
+# ============================================================================
+# Step 5: Update plugins
 # ============================================================================
 
 echo ""
@@ -189,6 +231,9 @@ fi
 echo ""
 echo "🎉 Update complete!"
 echo ""
+echo "✅ Systemd tmux service has been updated"
+echo "   Your background tmux daemon is running and will restore sessions at login"
+echo ""
 echo "Regenerating shell configuration..."
 bash "$SCRIPT_DIR/setup-shell.sh" || {
     echo "⚠️  Could not regenerate shell config, but other updates completed"
@@ -198,6 +243,7 @@ echo "Next steps:"
 echo "  1. If you have active tmux sessions, the config is already reloaded"
 echo "  2. Install/update plugins: Press Ctrl+a, then i (or u for updates)"
 echo "  3. Verify: ~/.config/tmux/scripts/doctor.sh"
+echo "  4. Check service status: systemctl --user status tmux.service"
 echo ""
 echo "If you encounter issues, your backup is at:"
 echo "  $BACKUP_DIR"

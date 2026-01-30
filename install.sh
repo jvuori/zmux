@@ -344,7 +344,53 @@ else
 fi
 
 # ============================================================================
-# Step 7: Shell Configuration (Important!)
+# Step 7: Setup systemd tmux service for background startup
+# ============================================================================
+
+echo ""
+echo "🚀 Setting up systemd tmux service..."
+
+SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
+mkdir -p "$SYSTEMD_USER_DIR"
+
+cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
+[Unit]
+Description=Tmux Session Manager
+Documentation=man:tmux(1)
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/mkdir -p %h/.tmux
+ExecStartPre=/usr/bin/mkdir -p %h/.tmux/resurrect
+ExecStart=/usr/bin/tmux start-server
+ExecStartPost=/usr/bin/bash -c 'sleep 0.5 && /usr/bin/tmux source-file %h/.tmux.conf'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
+SYSTEMD_SERVICE
+
+echo "✅ Created systemd service file: $SYSTEMD_USER_DIR/tmux.service"
+
+# Enable the service
+if systemctl --user daemon-reload 2>/dev/null && \
+   systemctl --user enable tmux.service 2>/dev/null && \
+   systemctl --user start tmux.service 2>/dev/null; then
+    echo "✅ Systemd tmux service enabled and started"
+    echo "   Sessions will now restore automatically at login"
+else
+    echo "⚠️  Could not enable systemd service (systemd user session may not be available)"
+    echo "   You can manually enable it later:"
+    echo "   systemctl --user daemon-reload"
+    echo "   systemctl --user enable tmux.service"
+fi
+
+# ============================================================================
+# Step 8: Shell Configuration (Important!)
 # ============================================================================
 
 echo ""
@@ -368,7 +414,7 @@ else
 fi
 
 # ============================================================================
-# Step 8: Optional dependencies
+# Step 9: Optional dependencies
 # ============================================================================
 
 echo ""
@@ -387,6 +433,9 @@ fi
 
 echo ""
 echo "🎉 Installation complete!"
+echo ""
+echo "✅ Systemd tmux service is now active!"
+echo "   Your sessions will be automatically restored at login."
 echo ""
 echo "⚠️  IMPORTANT: If you have an active tmux session, reload the config:"
 echo "   1. In tmux, press your current prefix key (usually Ctrl+b)"
@@ -407,4 +456,8 @@ echo "  - Tab mode: Ctrl+t"
 echo "  - Scroll mode: Ctrl+s"
 echo ""
 echo "For more information, see README.md"
+echo ""
+echo "Service monitoring:"
+echo "  systemctl --user status tmux.service"
+echo "  journalctl --user -u tmux.service -f"
 

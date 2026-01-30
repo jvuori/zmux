@@ -1,0 +1,12 @@
+[Unit]
+Description=Save tmux session before shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=$HOME/.config/tmux/scripts/save-session-before-shutdown.sh
+TimeoutStartSec=5
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target

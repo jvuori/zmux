@@ -92,6 +92,7 @@ cp "$SCRIPT_DIR/scripts/session-switcher.sh" "$TMUX_CONFIG_DIR/scripts/session-s
 cp "$SCRIPT_DIR/scripts/doctor.sh" "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 cp "$SCRIPT_DIR/scripts/tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
 cp "$SCRIPT_DIR/scripts/systemd-tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
+cp "$SCRIPT_DIR/scripts/save-session-before-shutdown.sh" "$TMUX_CONFIG_DIR/scripts/save-session-before-shutdown.sh"
 cp "$SCRIPT_DIR/scripts/show-help.sh" "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 cp "$SCRIPT_DIR/scripts/get-mode-help.sh" "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 cp "$SCRIPT_DIR/scripts/capture-cursor-agent-session.sh" "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
@@ -108,6 +109,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/save-session-before-shutdown.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
@@ -375,6 +377,44 @@ echo "   • XDG autostart runs when you log into your desktop"
 echo "   • Daemon starts BEFORE you open any terminal"
 echo "   • All previous sessions are restored in the background"
 echo "   • When you open WezTerm, your session appears instantly!"
+
+# ============================================================================
+# Step 7.5: Setup systemd shutdown save service
+# ============================================================================
+
+echo ""
+echo "💾 Setting up automatic session save on shutdown..."
+
+# Create systemd user directory
+mkdir -p "$HOME/.config/systemd/user"
+
+# Copy the systemd service file
+cat > "$HOME/.config/systemd/user/tmux-shutdown-save.service" << 'SERVICE_FILE'
+[Unit]
+Description=Save tmux session before shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/tmux/scripts/save-session-before-shutdown.sh
+TimeoutStartSec=5
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target
+SERVICE_FILE
+
+# Enable the service
+systemctl --user daemon-reload
+systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
+    echo "✅ Shutdown save service enabled" || \
+    echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+
+echo ""
+echo "💾 Session will be automatically saved:"
+echo "   • Every 5 minutes (auto-save)"
+echo "   • Before system shutdown/reboot"
+echo "   • When you press Ctrl+q (quit tmux)"
 
 # ============================================================================
 # Step 8: Shell Configuration (Important!)

@@ -91,6 +91,7 @@ cp "$SCRIPT_DIR/tmux/modes/move.conf" "$TMUX_CONFIG_DIR/modes/move.conf"
 cp "$SCRIPT_DIR/scripts/session-switcher.sh" "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 cp "$SCRIPT_DIR/scripts/doctor.sh" "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 cp "$SCRIPT_DIR/scripts/tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+cp "$SCRIPT_DIR/scripts/systemd-tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
 cp "$SCRIPT_DIR/scripts/show-help.sh" "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 cp "$SCRIPT_DIR/scripts/get-mode-help.sh" "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 cp "$SCRIPT_DIR/scripts/capture-cursor-agent-session.sh" "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
@@ -106,6 +107,7 @@ cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-comm
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
@@ -353,6 +355,7 @@ echo "🚀 Setting up systemd tmux service..."
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"
 
+# Create the systemd service file that uses our startup script
 cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
 [Unit]
 Description=Tmux Session Manager
@@ -361,14 +364,11 @@ After=graphical-session-pre.target
 PartOf=graphical-session.target
 
 [Service]
-Type=forking
+Type=simple
 RemainAfterExit=yes
-ExecStartPre=/usr/bin/mkdir -p %h/.tmux
-ExecStartPre=/usr/bin/mkdir -p %h/.tmux/resurrect
-ExecStart=/usr/bin/tmux start-server
-ExecStartPost=/usr/bin/bash -c 'sleep 0.5 && /usr/bin/tmux source-file %h/.tmux.conf'
+ExecStart=%h/.config/tmux/scripts/systemd-tmux-start.sh
 Restart=on-failure
-RestartSec=5
+RestartSec=10
 
 [Install]
 WantedBy=graphical-session.target

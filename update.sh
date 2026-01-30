@@ -61,9 +61,15 @@ cp "$SCRIPT_DIR/tmux/modes/move.conf" "$TMUX_CONFIG_DIR/modes/move.conf"
 cp "$SCRIPT_DIR/scripts/session-switcher.sh" "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 cp "$SCRIPT_DIR/scripts/doctor.sh" "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 cp "$SCRIPT_DIR/scripts/tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+cp "$SCRIPT_DIR/scripts/systemd-tmux-start.sh" "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
 cp "$SCRIPT_DIR/scripts/show-help.sh" "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 cp "$SCRIPT_DIR/scripts/get-mode-help.sh" "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 cp "$SCRIPT_DIR/scripts/capture-cursor-agent-session.sh" "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
+cp "$SCRIPT_DIR/scripts/toggle-lock-mode.sh" "$TMUX_CONFIG_DIR/scripts/toggle-lock-mode.sh"
+cp "$SCRIPT_DIR/scripts/lock-mode-indicator.sh" "$TMUX_CONFIG_DIR/scripts/lock-mode-indicator.sh"
+cp "$SCRIPT_DIR/scripts/swap-pane-left.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
+cp "$SCRIPT_DIR/scripts/swap-pane-right.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
+cp "$SCRIPT_DIR/scripts/session-killer.sh" "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 cp "$SCRIPT_DIR/scripts/git-branch-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
@@ -71,9 +77,15 @@ cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-comm
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/systemd-tmux-start.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/show-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/get-mode-help.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/capture-cursor-agent-session.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/toggle-lock-mode.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/lock-mode-indicator.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
@@ -140,6 +152,7 @@ echo "🚀 Updating systemd tmux service..."
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"
 
+# Create the systemd service file that uses our startup script
 cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
 [Unit]
 Description=Tmux Session Manager
@@ -148,14 +161,11 @@ After=graphical-session-pre.target
 PartOf=graphical-session.target
 
 [Service]
-Type=forking
+Type=simple
 RemainAfterExit=yes
-ExecStartPre=/usr/bin/mkdir -p %h/.tmux
-ExecStartPre=/usr/bin/mkdir -p %h/.tmux/resurrect
-ExecStart=/usr/bin/tmux start-server
-ExecStartPost=/usr/bin/bash -c 'sleep 0.5 && /usr/bin/tmux source-file %h/.tmux.conf'
+ExecStart=%h/.config/tmux/scripts/systemd-tmux-start.sh
 Restart=on-failure
-RestartSec=5
+RestartSec=10
 
 [Install]
 WantedBy=graphical-session.target
@@ -163,12 +173,17 @@ SYSTEMD_SERVICE
 
 echo "✅ Updated systemd service file: $SYSTEMD_USER_DIR/tmux.service"
 
-# Reload and restart the service
-if systemctl --user daemon-reload 2>/dev/null && \
-   systemctl --user restart tmux.service 2>/dev/null; then
-    echo "✅ Systemd tmux service reloaded and restarted"
+# Reload the daemon configuration and enable the service
+if systemctl --user daemon-reload 2>/dev/null; then
+    echo "✅ Systemd configuration reloaded"
+    # Always enable the service (idempotent operation)
+    if systemctl --user enable tmux.service 2>/dev/null; then
+        echo "✅ Systemd tmux service enabled"
+    fi
+    # Note: We don't restart the service here to avoid killing user's sessions
+    echo "ℹ️  Service will use new config on next login/restart"
 else
-    echo "⚠️  Could not reload systemd service (service may not be active)"
+    echo "⚠️  Could not reload systemd service (systemd user session may not be available)"
     echo "   Try enabling it: systemctl --user enable tmux.service"
 fi
 

@@ -346,78 +346,35 @@ else
 fi
 
 # ============================================================================
-# Step 7: Setup systemd tmux service for background startup
+# Step 7: Setup XDG autostart (runs at graphical login, BEFORE terminals)
 # ============================================================================
 
 echo ""
-echo "🚀 Setting up systemd tmux service..."
+echo "🚀 Setting up automatic session restoration..."
 
-SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
-mkdir -p "$SYSTEMD_USER_DIR"
+# Create XDG autostart directory
+mkdir -p "$HOME/.config/autostart"
 
-# Create the systemd service file that uses our startup script
-cat > "$SYSTEMD_USER_DIR/tmux.service" << 'SYSTEMD_SERVICE'
-[Unit]
-Description=Tmux Session Manager
-Documentation=man:tmux(1)
+# Create desktop entry for XDG autostart
+cat > "$HOME/.config/autostart/zmux-daemon.desktop" << 'DESKTOP_ENTRY'
+[Desktop Entry]
+Type=Application
+Name=zmux Daemon
+Comment=Start tmux daemon with session restoration before any terminal opens
+Exec=sh -c "\$HOME/.config/tmux/scripts/systemd-tmux-start.sh"
+Terminal=false
+X-GNOME-Autostart-enabled=true
+Hidden=false
+NoDisplay=true
+DESKTOP_ENTRY
 
-[Service]
-Type=simple
-RemainAfterExit=yes
-ExecStart=%h/.config/tmux/scripts/systemd-tmux-start.sh
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=default.target
-SYSTEMD_SERVICE
-
-echo "✅ Created systemd service file: $SYSTEMD_USER_DIR/tmux.service"
-
-# Enable user lingering (required for services to persist across reboots)
+echo "✅ XDG autostart configured: ~/.config/autostart/zmux-daemon.desktop"
 echo ""
-echo "🔧 Enabling user lingering for systemd services..."
-if loginctl enable-linger "$USER" 2>/dev/null; then
-    echo "✅ User lingering enabled (services will persist across reboots)"
-else
-    echo "⚠️  Could not enable lingering. Services may not start after reboot."
-    echo "   Try manually: sudo loginctl enable-linger $USER"
-fi
-
-# Enable the service
-echo ""
-echo "🔧 Enabling systemd tmux service..."
-
-if ! systemctl --user daemon-reload 2>/dev/null; then
-    echo "⚠️  Could not reload systemd (user session may not be available)"
-    echo "   Try this after logging out and back in (or after reboot):"
-    echo "   systemctl --user daemon-reload"
-    echo "   systemctl --user enable tmux.service"
-    SKIP_SERVICE_START=true
-fi
-
-if [ -z "$SKIP_SERVICE_START" ]; then
-    if systemctl --user enable tmux.service 2>/dev/null; then
-        echo "✅ Systemd service enabled (will start at next login)"
-    else
-        echo "⚠️  Could not enable service. Try manually:"
-        echo "   systemctl --user enable tmux.service"
-        SKIP_SERVICE_START=true
-    fi
-fi
-
-if [ -z "$SKIP_SERVICE_START" ]; then
-    if systemctl --user start tmux.service 2>/dev/null; then
-        echo "✅ Systemd service started now"
-        echo ""
-        echo "🎯 Sessions will restore automatically:"
-        echo "   • At login time (systemd starts the service)"
-        echo "   • When you open WezTerm (attaches to restored session)"
-    else
-        echo "⚠️  Could not start service. Try manually:"
-        echo "   systemctl --user start tmux.service"
-    fi
-fi
+echo "🎯 Sessions will restore automatically at login:"
+echo "   • XDG autostart runs when you log into your desktop"
+echo "   • Daemon starts BEFORE you open any terminal"
+echo "   • All previous sessions are restored in the background"
+echo "   • When you open WezTerm, your session appears instantly!"
 
 # ============================================================================
 # Step 8: Shell Configuration (Important!)
@@ -464,8 +421,8 @@ fi
 echo ""
 echo "🎉 Installation complete!"
 echo ""
-echo "✅ Systemd tmux service is now active!"
-echo "   Your sessions will be automatically restored at login."
+echo "✅ XDG autostart configured for automatic session restoration!"
+echo "   Your sessions will restore when you log into your desktop."
 echo ""
 echo "⚠️  IMPORTANT: If you have an active tmux session, reload the config:"
 echo "   1. In tmux, press your current prefix key (usually Ctrl+b)"
@@ -475,7 +432,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Reload config in existing sessions (see above) or start new tmux: tmux"
 echo "  2. Plugins should be installed automatically (if installation failed, press Ctrl+a, then i)"
-echo "  3. Verify systemd setup: ./verify-systemd.sh"
+echo "  3. Verify autostart setup: ./verify-autostart.sh"
 echo "  4. Verify complete installation: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "Key bindings (after reload):"
@@ -486,10 +443,8 @@ echo "  - Move mode: Ctrl+h (arrow keys move)"
 echo "  - Tab mode: Ctrl+t"
 echo "  - Scroll mode: Ctrl+s"
 echo ""
-echo "For more information, see README.md or docs/SYSTEMD_TMUX_SERVICE.md"
+echo "For more information, see README.md or docs/AUTOSTART_SOLUTION.md"
 echo ""
-echo "Service monitoring:"
-echo "  ./verify-systemd.sh          # Full verification"
-echo "  systemctl --user status tmux.service"
-echo "  journalctl --user -u tmux.service -f"
+echo "Verification:"
+echo "  ./verify-autostart.sh          # Full verification"
 

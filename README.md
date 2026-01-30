@@ -31,25 +31,26 @@ cd zmux
 
 ### Automatic Session Restoration
 
-zmux includes:
+zmux automatically restores your tmux sessions at login using **XDG autostart**.
 
-1. **Systemd service** - Automatically starts tmux at login with all sessions restored
-2. **Smart session starter** - `tmux-start.sh` script that intelligently handles restoration
+#### How It Works
 
-#### Systemd Auto-Start (Recommended)
+The `install.sh` script sets up XDG autostart:
 
-The `install.sh` script sets up a systemd service that:
+- Creates `~/.config/autostart/zmux-daemon.desktop`
+- Runs when you **log into your graphical desktop**
+- Starts **BEFORE you open any terminal**
+- All previous sessions are restored in the background
+- When you open a terminal, your sessions appear instantly ⚡
 
-- Starts tmux automatically at login
-- Restores all previous sessions in the background
-- When you open a terminal, your session appears instantly (no delay!)
+This works reliably on all Linux distributions with graphical desktop environments (GNOME, KDE, XFCE, i3, etc.).
 
-See [docs/SYSTEMD_SETUP.md](docs/SYSTEMD_SETUP.md) for details and troubleshooting.
+See [docs/AUTOSTART_SOLUTION.md](docs/AUTOSTART_SOLUTION.md) for implementation details.
 
 To verify the setup:
 
 ```bash
-./verify-systemd.sh
+./verify-autostart.sh
 ```
 
 #### Manual Session Restoration

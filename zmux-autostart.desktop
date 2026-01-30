@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=zmux Daemon
+Comment=Start tmux daemon with session restoration
+Exec=sh -c "$HOME/.config/tmux/scripts/systemd-tmux-start.sh"
+Terminal=false
+X-GNOME-Autostart-enabled=true
+Hidden=false
+NoDisplay=true

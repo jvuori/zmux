@@ -99,7 +99,7 @@ done
 
 # Systemd service not available or failed - fall back to local startup
 # This is the fallback path when systemd isn't being used
-echo "Systemd tmux service not available, starting tmux locally..."
+echo "Starting tmux with local session restoration..."
 
 # Mark as restoring (in case we need to coordinate with other terminals)
 echo "restoring" > "$STATUS_FILE"

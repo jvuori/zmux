@@ -79,7 +79,7 @@ fi
 # Test 5: Session variable
 echo "Test 5: Session variable @lock_mode"
 cleanup_session
-tmux new-session -d -s "$TEST_SESSION" -c /home/jaakko 2>/dev/null
+tmux new-session -d -s "$TEST_SESSION" -c "$HOME" 2>/dev/null
 sleep 0.1
 tmux set-option -t "$TEST_SESSION" @lock_mode 0
 STATUS=$(tmux show-options -t "$TEST_SESSION" -v @lock_mode 2>/dev/null)

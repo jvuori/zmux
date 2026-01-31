@@ -41,7 +41,32 @@ echo "📋 Updating configuration files..."
 mkdir -p "$TMUX_CONFIG_DIR"
 mkdir -p "$TMUX_CONFIG_DIR/modes"
 mkdir -p "$TMUX_CONFIG_DIR/scripts"
-mkdir -p "$HOME/.tmux/resurrect"
+# Use XDG data directory for resurrect - MUST match @resurrect-dir in plugins.conf
+RESURRECT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
+mkdir -p "$RESURRECT_DIR"
+
+# Migrate old resurrect data if it exists (from ~/.tmux/resurrect to XDG location)
+# This ensures users don't lose their session data when updating
+if [ -d "$HOME/.tmux/resurrect" ] && [ "$(ls -A "$HOME/.tmux/resurrect" 2>/dev/null)" ]; then
+    echo "📦 Migrating existing session data to XDG location..."
+    for f in "$HOME/.tmux/resurrect"/tmux_resurrect_*.txt; do
+        [ -f "$f" ] || continue
+        basename=$(basename "$f")
+        if [ ! -f "$RESURRECT_DIR/$basename" ]; then
+            cp "$f" "$RESURRECT_DIR/"
+        fi
+    done
+    # Copy pane contents if they exist
+    if [ -f "$HOME/.tmux/resurrect/pane_contents.tar.gz" ]; then
+        cp "$HOME/.tmux/resurrect/pane_contents.tar.gz" "$RESURRECT_DIR/" 2>/dev/null || true
+    fi
+    # Update last symlink to point to the newest save
+    latest=$(ls "$RESURRECT_DIR"/tmux_resurrect_*.txt 2>/dev/null | sort | tail -1)
+    if [ -n "$latest" ]; then
+        ln -sf "$(basename "$latest")" "$RESURRECT_DIR/last"
+    fi
+    echo "✅ Session data migrated to: $RESURRECT_DIR"
+fi
 
 # Copy main config files
 cp "$SCRIPT_DIR/tmux/tmux.conf" "$TMUX_CONFIG_DIR/tmux.conf"

@@ -14,7 +14,8 @@ STATUS_FILE="$HOME/.tmux/daemon-status"
 MAX_WAIT=60  # Maximum seconds to wait for systemd restoration
 
 # Ensure required directories exist (for plugins like tmux-resurrect)
-mkdir -p ~/.tmux/resurrect
+# Use XDG data directory - MUST match @resurrect-dir in plugins.conf
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
 mkdir -p ~/.config/tmux/scripts
 
 # Ensure shutdown save service is enabled (in case systemd disabled it after reboot)

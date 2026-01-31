@@ -38,6 +38,20 @@ fi
 
 # Function to get the most recently active session
 get_last_session() {
+    # First, check if we have a saved active session from before shutdown
+    ACTIVE_SESSION_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/active-session.txt"
+    if [ -f "$ACTIVE_SESSION_FILE" ]; then
+        SAVED_SESSION=$(cat "$ACTIVE_SESSION_FILE" 2>/dev/null)
+        # Verify the session still exists
+        if [ -n "$SAVED_SESSION" ] && tmux has-session -t "$SAVED_SESSION" 2>/dev/null; then
+            echo "$SAVED_SESSION"
+            return 0
+        fi
+        # Clean up the file if the session doesn't exist anymore
+        rm -f "$ACTIVE_SESSION_FILE" 2>/dev/null
+    fi
+    
+    # Fallback: get most recently active session by activity timestamp
     tmux list-sessions -F "#{session_activity}:#{session_name}" 2>/dev/null | \
         sort -t: -k1 -rn | \
         head -1 | \

@@ -73,6 +73,15 @@ for i in $(seq 1 $MAX_WAIT); do
     fi
 done
 
+# After restoration, clean up the "default" session if other sessions exist
+# This prevents "default" from being selected when we have saved sessions
+SESSION_COUNT=$(tmux list-sessions 2>/dev/null | wc -l)
+if [ "$SESSION_COUNT" -gt 1 ]; then
+    # We have more than just "default" session, remove it
+    # The default session was just a trigger for continuum restoration
+    tmux kill-session -t default 2>/dev/null || true
+fi
+
 # Mark as ready - restoration complete
 write_status "ready"
 

@@ -432,10 +432,14 @@ WantedBy=halt.target reboot.target shutdown.target
 SERVICE_FILE
 
 # Enable the service
-systemctl --user daemon-reload
-systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
-    echo "✅ Shutdown save service enabled" || \
-    echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+if command -v systemctl >/dev/null 2>&1; then
+	systemctl --user daemon-reload
+	systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
+		echo "✅ Shutdown save service enabled" || \
+		echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+else
+	echo "⚠️  systemctl not available, skipping service setup (non-systemd environment)"
+fi
 
 echo ""
 echo "💾 Session will be automatically saved:"

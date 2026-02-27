@@ -187,7 +187,7 @@ cat > "$HOME/.config/autostart/zmux-daemon.desktop" << 'DESKTOP_ENTRY'
 Type=Application
 Name=zmux Daemon
 Comment=Start tmux daemon with session restoration before any terminal opens
-Exec=sh -c "\$HOME/.config/tmux/scripts/systemd-tmux-start.sh"
+Exec=/bin/bash -c '$HOME/.config/tmux/scripts/systemd-tmux-start.sh'
 Terminal=false
 X-GNOME-Autostart-enabled=true
 Hidden=false

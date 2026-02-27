@@ -15,9 +15,27 @@ write_status() {
     echo "$1" > "$STATUS_FILE"
 }
 
+# Debug flag setup (check for debug mode)
+DEBUG_FILE="$HOME/.tmux/zmux-debug"
+LOG_FILE="$HOME/.tmux/zmux-start.log"
+
+if [ -f "$DEBUG_FILE" ]; then
+    exec >> "$LOG_FILE" 2>&1
+    echo "=== $(date '+%Y-%m-%d %H:%M:%S') Starting zmux daemon ===" 
+fi
+
 # Ensure required directories exist
 mkdir -p ~/.tmux/resurrect
 mkdir -p ~/.config/tmux/scripts
+
+# Wait for systemd user session to be ready before calling systemctl --user
+# The user session may not be fully initialized when autostart runs
+for i in $(seq 1 30); do
+    if systemctl --user is-system-running --wait >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.5
+done
 
 # Ensure shutdown save service is enabled (in case systemd disabled it after reboot)
 if systemctl --user is-enabled tmux-shutdown-save.service >/dev/null 2>&1; then
@@ -84,6 +102,11 @@ fi
 
 # Mark as ready - restoration complete
 write_status "ready"
+
+# Log completion if debug mode is enabled
+if [ -f "$DEBUG_FILE" ]; then
+    echo "=== $(date '+%Y-%m-%d %H:%M:%S') Restoration complete, tmux ready ===" 
+fi
 
 # Exit successfully - the tmux server continues running in the background
 exit 0

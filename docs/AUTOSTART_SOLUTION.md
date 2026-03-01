@@ -31,7 +31,7 @@ zmux now uses **XDG autostart** exclusively - the standard way desktop environme
 Type=Application
 Name=zmux Daemon
 Comment=Start tmux daemon with session restoration before any terminal opens
-Exec=/home/USER/.config/tmux/scripts/systemd-tmux-start.sh
+Exec=/bin/bash -c '$HOME/.config/tmux/scripts/systemd-tmux-start.sh'
 Terminal=false
 X-GNOME-Autostart-enabled=true
 Hidden=false
@@ -89,7 +89,119 @@ Should show:
 
 ## Troubleshooting
 
-### XDG autostart not working?
+### Debug Mode
+
+If autostart isn't working, enable debug logging to see what's happening:
+
+```bash
+# Create debug flag file
+touch ~/.tmux/zmux-debug
+
+# Re-run autostart (or log out and log back in)
+~/.config/tmux/scripts/systemd-tmux-start.sh
+
+# Check the logs
+cat ~/.tmux/zmux-start.log
+```
+
+The log file will show:
+- When the daemon started
+- When systemd user session became ready
+- When tmux restoration completed
+- Any errors encountered
+
+**Tip**: Remove the debug flag when done to disable logging:
+```bash
+rm ~/.tmux/zmux-debug
+```
+
+### Common Issues and Solutions
+
+#### Issue: Autostart doesn't start tmux
+
+**Potential causes**:
+1. **Systemd user session timing** - The user session might not be ready when autostart runs
+   - *Fix*: Script now waits up to 15 seconds for systemd user session readiness
+   - Check logs with: `touch ~/.tmux/zmux-debug && ~/.config/tmux/scripts/systemd-tmux-start.sh`
+
+2. **Environment variables** - `$HOME` or `$PATH` might be unset
+   - *Fix*: Script now uses `/bin/bash` with proper variable handling
+   - Verify: `echo $HOME` in the terminal
+
+3. **Script permissions** - Script might not be executable
+   - Check: `ls -l ~/.config/tmux/scripts/systemd-tmux-start.sh`
+   - Fix: `chmod +x ~/.config/tmux/scripts/systemd-tmux-start.sh`
+
+4. **tmux binary location** - tmux might not be at `/usr/bin/tmux`
+   - Check: `which tmux`
+   - Debug: `tmux list-sessions` in terminal (to verify tmux works)
+
+#### Issue: Sessions aren't being restored
+
+This is separate from autostart. Check:
+
+```bash
+# Verify continuum plugin is working
+tmux list-plugins
+
+# Check if resurrection data exists
+ls -la ~/.tmux/resurrect/
+
+# Manually check desktop file
+cat ~/.config/autostart/zmux-daemon.desktop
+```
+
+#### Issue: Multiple tmux servers running
+
+This might indicate:
+- Autostart started one server
+- Manual start or terminal launch started another
+
+Check and fix:
+```bash
+tmux list-sessions -a  # Show all sessions from all servers
+ps aux | grep tmux     # Show all tmux processes
+
+# Kill all tmux servers (this will terminate all sessions!)
+tmux kill-server
+```
+
+### Diagnostic Commands
+
+Run these to verify your setup:
+
+1. **Verify autostart configuration**
+   ```bash
+   ./verify-autostart.sh
+   ```
+
+2. **Run startup script manually**
+   ```bash
+   ~/.config/tmux/scripts/systemd-tmux-start.sh
+   ```
+
+3. **Check systemd user session status**
+   ```bash
+   systemctl --user status
+   ```
+
+4. **Simulate minimal autostart environment**
+   ```bash
+   env -i HOME=$HOME PATH=/usr/bin:/bin /bin/bash -c '~/.config/tmux/scripts/systemd-tmux-start.sh'
+   ```
+
+5. **Validate desktop file syntax**
+   ```bash
+   desktop-file-validate ~/.config/autostart/zmux-daemon.desktop
+   ```
+
+6. **Check journal logs for autostart events**
+   ```bash
+   journalctl --user -b -n 50  # Last 50 lines from this session
+   journalctl --user -b | grep -i zmux  # Filter for zmux entries
+   ```
+
+### XDG Autostart not working?
 
 1. Check if your desktop environment supports XDG autostart:
 

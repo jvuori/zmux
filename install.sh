@@ -390,7 +390,7 @@ cat > "$HOME/.config/autostart/zmux-daemon.desktop" << 'DESKTOP_ENTRY'
 Type=Application
 Name=zmux Daemon
 Comment=Start tmux daemon with session restoration before any terminal opens
-Exec=sh -c "\$HOME/.config/tmux/scripts/systemd-tmux-start.sh"
+Exec=/bin/bash -c '$HOME/.config/tmux/scripts/systemd-tmux-start.sh'
 Terminal=false
 X-GNOME-Autostart-enabled=true
 Hidden=false
@@ -432,10 +432,14 @@ WantedBy=halt.target reboot.target shutdown.target
 SERVICE_FILE
 
 # Enable the service
-systemctl --user daemon-reload
-systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
-    echo "✅ Shutdown save service enabled" || \
-    echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+if command -v systemctl >/dev/null 2>&1; then
+	systemctl --user daemon-reload
+	systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
+		echo "✅ Shutdown save service enabled" || \
+		echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+else
+	echo "⚠️  systemctl not available, skipping service setup (non-systemd environment)"
+fi
 
 echo ""
 echo "💾 Session will be automatically saved:"

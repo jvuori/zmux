@@ -15,7 +15,8 @@
 set -e
 
 GITHUB_REPO="jvuori/zmux"
-GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+# /releases/latest skips pre-releases; use /releases and take the first entry instead
+GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
 YES=false
 REQUESTED_VERSION=""
 

@@ -17,7 +17,8 @@ ZMUX_CONFIG_DIR="$HOME/.config/tmux"
 ZMUX_VERSION_FILE="$ZMUX_CONFIG_DIR/zmux-version"
 ZMUX_SCRIPTS_DIR="$ZMUX_CONFIG_DIR/scripts"
 GITHUB_REPO="jvuori/zmux"
-GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+# /releases/latest skips pre-releases; use /releases and take the first entry instead
+GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
 
 # ============================================================================
 # Helpers

@@ -149,6 +149,9 @@ cmd_update() {
 
     echo ""
     echo "✅ zmux updated to ${latest_ver}!"
+    # Exit immediately — update.sh has replaced this script on disk.
+    # Without exit, bash may try to read the new file's content and hit a parse error.
+    exit 0
 }
 
 cmd_help() {

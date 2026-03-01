@@ -4,11 +4,24 @@
 # ============================================================================
 # This script updates an existing zmux installation with the latest
 # configuration files and plugins
+#
+# Usage:
+#   ./update.sh          # Interactive update
+#   ./update.sh --yes    # Non-interactive update
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMUX_CONFIG_DIR="$HOME/.config/tmux"
+NONINTERACTIVE=false
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --yes|-y) NONINTERACTIVE=true ;;
+        *) echo "Unknown option: $arg"; echo "Usage: $0 [--yes]"; exit 1 ;;
+    esac
+done
 
 echo "🔄 Updating zmux configuration..."
 echo ""
@@ -101,6 +114,7 @@ cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-bra
 cp "$SCRIPT_DIR/scripts/git-branch-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -119,6 +133,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 
 echo "✅ Configuration files updated"
 
@@ -314,4 +329,21 @@ echo "  3. Verify: ~/.config/tmux/scripts/doctor.sh"
 echo ""
 echo "If you encounter issues, your backup is at:"
 echo "  $BACKUP_DIR"
+
+# ============================================================================
+# Update zmux CLI and version file
+# ============================================================================
+
+echo ""
+echo "🔧 Updating zmux command in ~/.local/bin/zmux..."
+mkdir -p "$HOME/.local/bin"
+cp "$TMUX_CONFIG_DIR/scripts/zmux.sh" "$HOME/.local/bin/zmux"
+chmod +x "$HOME/.local/bin/zmux"
+echo "✅ zmux command updated"
+
+# Write new version file
+if [ -f "$SCRIPT_DIR/VERSION" ]; then
+    cp "$SCRIPT_DIR/VERSION" "$TMUX_CONFIG_DIR/zmux-version"
+    echo "✅ Version updated to: $(cat "$SCRIPT_DIR/VERSION" | tr -d '[:space:]')"
+fi
 

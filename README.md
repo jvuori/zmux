@@ -15,7 +15,20 @@
 
 ## Quick Start
 
-### Installation
+### One-line install (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jvuori/zmux/master/get-zmux.sh | bash
+```
+
+This downloads the latest release, verifies its checksum, and runs the installer.  
+For a fully non-interactive install (useful in scripts):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jvuori/zmux/master/get-zmux.sh | bash -s -- --yes
+```
+
+### Install from source
 
 ```bash
 git clone https://github.com/jvuori/zmux.git
@@ -25,9 +38,22 @@ cd zmux
 
 ### First Run
 
-1. Start tmux: `tmux` (or use `~/.config/tmux/scripts/tmux-start.sh` for automatic session restoration)
+1. Start tmux: `zmux` or `zmux start` (installed to `~/.local/bin/zmux`)
 2. Install plugins: Press `Ctrl+a`, then `i` (this uses tmux prefix for plugin installation)
 3. Reload config: Press `Ctrl+a`, then `r` (custom binding)
+
+### The `zmux` command
+
+After installation a `zmux` command is available in `~/.local/bin/zmux`:
+
+```
+zmux                  Open / attach to a tmux session
+zmux start            Same as above
+zmux version          Print the installed version
+zmux update           Check for a newer release and self-update
+zmux doctor           Run diagnostic checks
+zmux help             Show help
+```
 
 ### Automatic Session Restoration
 

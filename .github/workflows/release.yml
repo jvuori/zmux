@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG}"
+          echo "tag=${TAG}"         >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          # Pre-release when version starts with 0. or contains a hyphen (e.g. -rc1)
+          if [[ "$VERSION" == 0.* || "$VERSION" == *-* ]]; then
+            echo "prerelease=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stamp version into release tree
+        run: |
+          # The tag is the single source of truth — no manual VERSION file update needed.
+          echo "${{ steps.version.outputs.version }}" > VERSION
+
+      - name: Build release tarball
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCHIVE="zmux-${VERSION}.tar.gz"
+
+          tar -czf "${ARCHIVE}" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='*.md' \
+            --exclude='screenshot.png' \
+            --transform "s|^|zmux-${VERSION}/|" \
+            VERSION \
+            install.sh \
+            update.sh \
+            uninstall.sh \
+            setup-shell.sh \
+            reload-config.sh \
+            get-zmux.sh \
+            tmux/ \
+            scripts/ \
+            plugins/ \
+            zmux-autostart.desktop \
+            tmux-shutdown-save.service
+
+          sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "zmux ${{ steps.version.outputs.tag }}"
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: |
+            zmux-${{ steps.version.outputs.version }}.tar.gz
+            zmux-${{ steps.version.outputs.version }}.tar.gz.sha256

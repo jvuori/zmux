@@ -3,12 +3,25 @@
 # zmux Installation Script
 # ============================================================================
 # This script installs tmux and configures it to work like Zellij
+#
+# Usage:
+#   ./install.sh          # Interactive install
+#   ./install.sh --yes    # Non-interactive (accept all defaults)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMUX_CONFIG_DIR="$HOME/.config/tmux"
 TMUX_PLUGINS_DIR="$HOME/.tmux/plugins"
+NONINTERACTIVE=false
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --yes|-y) NONINTERACTIVE=true ;;
+        *) echo "Unknown option: $arg"; echo "Usage: $0 [--yes]"; exit 1 ;;
+    esac
+done
 
 echo "🚀 Installing zmux (Zellij-like tmux configuration)..."
 echo ""
@@ -131,6 +144,7 @@ cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-bra
 cp "$SCRIPT_DIR/scripts/git-branch-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -149,6 +163,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 
 echo "✅ Configuration files copied"
 
@@ -184,8 +199,12 @@ if [ -f "$HOME/.tmux.conf" ] || [ -L "$HOME/.tmux.conf" ]; then
             echo "✅ ~/.tmux.conf already points to zmux configuration"
         else
             echo "   Current symlink points to: $CURRENT_LINK"
-            read -p "   Backup and replace with zmux config? [y/N] " -n 1 -r
-            echo
+            if [ "$NONINTERACTIVE" = "true" ]; then
+                REPLY="y"
+            else
+                read -p "   Backup and replace with zmux config? [y/N] " -n 1 -r
+                echo
+            fi
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 BACKUP_FILE="$HOME/.tmux.conf.backup.$(date +%Y%m%d_%H%M%S)"
                 echo "   Backing up to: $BACKUP_FILE"
@@ -200,8 +219,12 @@ if [ -f "$HOME/.tmux.conf" ] || [ -L "$HOME/.tmux.conf" ]; then
         fi
     else
         # It's a regular file
-        read -p "   Backup and replace with zmux config? [y/N] " -n 1 -r
-        echo
+        if [ "$NONINTERACTIVE" = "true" ]; then
+            REPLY="y"
+        else
+            read -p "   Backup and replace with zmux config? [y/N] " -n 1 -r
+            echo
+        fi
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             BACKUP_FILE="$HOME/.tmux.conf.backup.$(date +%Y%m%d_%H%M%S)"
             echo "   Backing up to: $BACKUP_FILE"
@@ -461,8 +484,12 @@ echo "The setup script will create ~/.config/zmux/shell-config and add"
 echo "a source line to your ~/.bashrc or ~/.zshrc. You can easily disable"
 echo "it by commenting out that line."
 echo ""
-read -p "Set up shell configuration automatically? [Y/n] " -n 1 -r
-echo
+if [ "$NONINTERACTIVE" = "true" ]; then
+    REPLY=""
+else
+    read -p "Set up shell configuration automatically? [Y/n] " -n 1 -r
+    echo
+fi
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     "$SCRIPT_DIR/setup-shell.sh"
 else
@@ -518,4 +545,31 @@ echo "For more information, see README.md or docs/AUTOSTART_SOLUTION.md"
 echo ""
 echo "Verification:"
 echo "  ./verify-autostart.sh          # Full verification"
+
+# ============================================================================
+# Install zmux CLI to ~/.local/bin
+# ============================================================================
+
+echo ""
+echo "🔧 Installing zmux command to ~/.local/bin/zmux..."
+mkdir -p "$HOME/.local/bin"
+cp "$TMUX_CONFIG_DIR/scripts/zmux.sh" "$HOME/.local/bin/zmux"
+chmod +x "$HOME/.local/bin/zmux"
+echo "✅ zmux command installed"
+
+# Write version file
+if [ -f "$SCRIPT_DIR/VERSION" ]; then
+    cp "$SCRIPT_DIR/VERSION" "$TMUX_CONFIG_DIR/zmux-version"
+    echo "✅ Version recorded: $(cat "$SCRIPT_DIR/VERSION" | tr -d '[:space:]')"
+fi
+
+# Hint about PATH
+if ! echo ":$PATH:" | grep -q ":$HOME/.local/bin:"; then
+    echo ""
+    echo "⚠️  ~/.local/bin is not in your PATH."
+    echo "   Add this to your ~/.bashrc or ~/.zshrc:"
+    echo '   export PATH="$HOME/.local/bin:$PATH"'
+else
+    echo "✅ zmux is ready — run: zmux help"
+fi
 

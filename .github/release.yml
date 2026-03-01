@@ -1,0 +1,41 @@
+# .github/release.yml
+# Configures GitHub's auto-generated release notes.
+# Merged PRs are sorted into these categories based on their labels.
+# Apply labels to PRs when merging; the release body is built automatically
+# when a tag is pushed — no manual changelog editing required.
+#
+# Labels to create in the repo:  breaking, feature, fix, docs, chore, deps
+
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+    authors:
+      - dependabot
+      - dependabot[bot]
+
+  categories:
+    - title: "⚠️ Breaking Changes"
+      labels:
+        - breaking
+        - semver-major
+
+    - title: "🚀 New Features"
+      labels:
+        - feature
+        - enhancement
+        - semver-minor
+
+    - title: "🐛 Bug Fixes"
+      labels:
+        - fix
+        - bug
+
+    - title: "📚 Documentation"
+      labels:
+        - docs
+        - documentation
+
+    - title: "🔧 Other Changes"
+      labels:
+        - "*"

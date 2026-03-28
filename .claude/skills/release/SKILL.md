@@ -92,16 +92,19 @@ git tag <new-version>
 git push origin <new-version>
 ```
 
-Immediately after pushing, pre-create the GitHub release with the formatted release body so GitHub Actions can append its auto-generated notes to it:
+Immediately after pushing, set the release body with the formatted notes. The Actions workflow may have already created the release, so try `create` first and fall back to `edit`:
 
 ```bash
 gh release create <new-version> \
   --title "zmux <new-version>" \
   --notes "<markdown release body from Step 4>" \
-  --draft=false
+  --draft=false \
+|| gh release edit <new-version> \
+  --title "zmux <new-version>" \
+  --notes "<markdown release body from Step 4>"
 ```
 
-The GitHub Actions workflow will pick up the existing release and append the auto-generated "What's Changed" commit list and attach the release assets.
+The GitHub Actions workflow will attach the release assets and, with `append_body: true`, append auto-generated commit notes to the body.
 
 Inform the user the release is live and the workflow is building the tarball.
 

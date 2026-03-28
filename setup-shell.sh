@@ -183,7 +183,10 @@ _zmux_configure_fzf() {
 
 # Git operations with Ctrl+g (zsh)
 # Ctrl+g: Git branch fuzzy search with fzf
+# Only active outside tmux: inside tmux, C-g is intercepted by tmux's root key
+# table before the shell sees it, so this ZLE binding is unreachable inside tmux.
 _zmux_configure_git_zsh() {
+    if [ -n "$TMUX" ]; then return 0; fi
     if command -v fzf >/dev/null 2>&1 && [ -x "$HOME/.config/tmux/scripts/fzf-git-branch.sh" ]; then
         {
             # Widget for git operations (Ctrl+g prefix)

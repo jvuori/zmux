@@ -19,9 +19,10 @@ Activate when the user wants to release the current state of the project — e.g
 Run these commands to understand what has changed since the last release:
 
 ```bash
-git tag --sort=-v:refname | head -1          # latest tag (current version)
-git log <latest-tag>..HEAD --oneline         # commits since last release
-git diff <latest-tag>..HEAD --stat           # files changed
+git tag --sort=-v:refname | head -1                          # latest tag (current version)
+git log <latest-tag>..HEAD --oneline                         # commits since last release
+git diff <latest-tag>..HEAD --stat                           # files changed
+git log <latest-tag>..HEAD --format="%an" | sort -u          # unique contributor names
 ```
 
 ### Step 2 — Determine bump level
@@ -45,7 +46,7 @@ Parse the current tag (e.g. `0.1.5`) and increment the appropriate component:
 
 ### Step 4 — Write a release summary
 
-Produce a concise summary suitable for showing to the user:
+Produce a concise summary suitable for showing to the user, and also used verbatim as the GitHub release body:
 
 ```
 Current version : 0.1.5
@@ -55,9 +56,26 @@ Changes since 0.1.5:
 • <short description of each logical change group>
 
 Bump rationale: <one sentence explaining why patch/minor/major>
+
+Contributors: @name1, @name2
 ```
 
 Group related commits into bullet points — don't list every commit hash.
+
+For the **GitHub release body** (used in Step 6), format it as Markdown:
+
+```markdown
+## What's new
+
+- <change 1>
+- <change 2>
+
+## Contributors
+
+- @<github-username-or-name>
+```
+
+Resolve GitHub usernames with `gh api repos/:owner/:repo/commits/<sha> --jq '.author.login'` for each unique author if needed, falling back to the git author name.
 
 ### Step 5 — Ask for confirmation
 
@@ -67,14 +85,25 @@ Show the summary and ask:
 
 Wait for the user's response before doing anything with git.
 
-### Step 6 — Create and push the tag (only after confirmation)
+### Step 6 — Create and push the tag, then pre-create the release (only after confirmation)
 
 ```bash
 git tag <new-version>
 git push origin <new-version>
 ```
 
-After pushing, inform the user that the GitHub Actions release workflow will now build and publish the release automatically.
+Immediately after pushing, pre-create the GitHub release with the formatted release body so GitHub Actions can append its auto-generated notes to it:
+
+```bash
+gh release create <new-version> \
+  --title "zmux <new-version>" \
+  --notes "<markdown release body from Step 4>" \
+  --draft=false
+```
+
+The GitHub Actions workflow will pick up the existing release and append the auto-generated "What's Changed" commit list and attach the release assets.
+
+Inform the user the release is live and the workflow is building the tarball.
 
 ## Important Rules
 

@@ -144,6 +144,7 @@ cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-bra
 cp "$SCRIPT_DIR/scripts/git-branch-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+cp "$SCRIPT_DIR/scripts/lazygit-popup.sh" "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
@@ -163,6 +164,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 
 echo "✅ Configuration files copied"
@@ -302,6 +304,34 @@ if ! command -v fzf >/dev/null 2>&1; then
     else
         echo "❌ Please install fzf manually:"
         echo "   Visit: https://github.com/junegunn/fzf#installation"
+    fi
+fi
+
+# Check if lazygit is installed (required for git mode)
+if ! command -v lazygit >/dev/null 2>&1; then
+    echo "⚠️  lazygit is required for git operations (Ctrl+g, l). Installing..."
+    if command -v apt-get >/dev/null 2>&1; then
+        # Try to install from distro repository first (usually up-to-date enough)
+        sudo apt-get install -y lazygit 2>/dev/null || {
+            echo "ℹ️  lazygit not in distro repo. Installing via go..."
+            if command -v go >/dev/null 2>&1; then
+                go install github.com/jesseduffield/lazygit@latest 2>/dev/null || {
+                    echo "❌ Could not install lazygit automatically. Please install it manually:"
+                    echo "   Visit: https://github.com/jesseduffield/lazygit#installation"
+                }
+            else
+                echo "❌ Could not install lazygit automatically. Please install it manually:"
+                echo "   Visit: https://github.com/jesseduffield/lazygit#installation"
+            fi
+        }
+    elif command -v brew >/dev/null 2>&1; then
+        brew install lazygit 2>/dev/null || {
+            echo "❌ Could not install lazygit automatically. Please install it manually:"
+            echo "   brew install lazygit"
+        }
+    else
+        echo "❌ Please install lazygit manually:"
+        echo "   Visit: https://github.com/jesseduffield/lazygit#installation"
     fi
 fi
 

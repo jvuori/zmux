@@ -39,7 +39,7 @@ case "$KEY_TABLE" in
     ;;
   git)
     # Ctrl+g: Git operations mode
-    echo "#[fg=colour244][#[fg=colour200]b#[default]: branches #[fg=colour244]| #[fg=colour200]c#[default]: commits#[fg=colour244]]"
+    echo "#[fg=colour244][#[fg=colour200]b#[default]: branches #[fg=colour244]| #[fg=colour200]c#[default]: commits #[fg=colour244]| #[fg=colour200]l#[default]: lazygit#[fg=colour244]]"
     ;;
   *)
     # Root mode: Show all modes with single Ctrl+ prefix, git operations, and lock

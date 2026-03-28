@@ -74,6 +74,13 @@ else
     echo "✅ fzf is installed (enhanced session switching available)"
 fi
 
+# Check if lazygit is available (optional, for git operations)
+if ! command -v lazygit >/dev/null 2>&1; then
+    echo "ℹ️  INFO: lazygit is not installed (optional, for git UI - Ctrl+g, l)"
+else
+    echo "✅ lazygit is installed (git UI available)"
+fi
+
 # Check tmux server
 if tmux has-session 2>/dev/null; then
     echo "✅ tmux server is running"

@@ -62,20 +62,14 @@ Contributors: @name1, @name2
 
 Group related commits into bullet points — don't list every commit hash.
 
-For the **GitHub release body** (used in Step 6), format it as Markdown:
+For the **GitHub release body** (used in Step 6), format it as Markdown with only the changes — do **not** include a Contributors section. GitHub automatically renders a Contributors block below the release body; adding one manually causes a duplicate.
 
 ```markdown
 ## What's new
 
 - <change 1>
 - <change 2>
-
-## Contributors
-
-- @<github-username-or-name>
 ```
-
-Resolve GitHub usernames with `gh api repos/:owner/:repo/commits/<sha> --jq '.author.login'` for each unique author if needed, falling back to the git author name.
 
 ### Step 5 — Ask for confirmation
 

@@ -16,7 +16,13 @@ Activate when the user wants to release the current state of the project — e.g
 
 ### Step 1 — Gather context
 
-Run these commands to understand what has changed since the last release:
+First, sync tags from remote so the local tag list is up to date:
+
+```bash
+git fetch --tags
+```
+
+Then gather context:
 
 ```bash
 git tag --sort=-v:refname | head -1                          # latest tag (current version)
@@ -81,18 +87,24 @@ Wait for the user's response before doing anything with git.
 
 ### Step 6 — Create and push the tag, then pre-create the release (only after confirmation)
 
+Create the tag locally and push it. If the tag already exists on remote, check whether it points to the same commit — if yes, it's safe to proceed (a previous attempt created it); if it points to a different commit, abort and tell the user.
+
 ```bash
-git tag <new-version>
-git push origin <new-version>
+git tag <new-version>                      # may already exist locally — that's fine
+git push origin <new-version> 2>&1        # may be rejected if already on remote
+# Check: if rejected, verify remote tag points to HEAD
+git ls-remote origin refs/tags/<new-version>   # get remote tag SHA
+git rev-list -n1 <new-version>                 # get local tag SHA
+# If both SHAs match → proceed. If they differ → abort.
 ```
 
-Immediately after pushing, set the release body with the formatted notes. The Actions workflow may have already created the release, so try `create` first and fall back to `edit`:
+Immediately after the tag is confirmed on remote, set the release body. Try `create` first; if the release already exists, use `edit`. Suppress the expected "already exists" error from `create` so it doesn't alarm the user:
 
 ```bash
 gh release create <new-version> \
   --title "zmux <new-version>" \
   --notes "<markdown release body from Step 4>" \
-  --draft=false \
+  --draft=false 2>/dev/null \
 || gh release edit <new-version> \
   --title "zmux <new-version>" \
   --notes "<markdown release body from Step 4>"

@@ -200,7 +200,14 @@ if [ -f "$HOME/.tmux.conf" ] || [ -L "$HOME/.tmux.conf" ]; then
     
     # Check if it's already pointing to our config
     if [ -L "$HOME/.tmux.conf" ]; then
-        CURRENT_LINK=$(readlink -f "$HOME/.tmux.conf")
+        # Use readlink without -f for BSD/macOS compatibility
+        # -f follows all symlinks, but on macOS we can use -L (lowercase) or just readlink without flags
+        CURRENT_LINK=$(readlink "$HOME/.tmux.conf")
+        # Make it absolute path if needed
+        case "$CURRENT_LINK" in
+            /*) ;; # Already absolute
+            *) CURRENT_LINK="$HOME/$CURRENT_LINK" ;; # Make relative paths absolute
+        esac
         if [ "$CURRENT_LINK" = "$TMUX_CONFIG_DIR/tmux.conf" ]; then
             echo "✅ ~/.tmux.conf already points to zmux configuration"
         else
@@ -251,35 +258,40 @@ else
 fi
 
 # ============================================================================
-# Step 5.5: Install WSL-aware xdg-open shim
+# Step 5.5: Install xdg-open shim (WSL + macOS + Linux compatible)
 # ============================================================================
 echo ""
-echo "🔧 Ensuring xdg-open shim is installed for WSL compatibility..."
+echo "🔧 Ensuring xdg-open shim is installed for cross-platform compatibility..."
 if [ ! -f "$HOME/.local/bin/xdg-open" ]; then
         mkdir -p "$HOME/.local/bin"
         cat > "$HOME/.local/bin/xdg-open" <<'SH'
 #!/bin/sh
-# WSL-aware xdg-open shim. If powershell.exe is available, use it to open
-# files/URLs in Windows default apps; otherwise fall back to system xdg-open.
+# Cross-platform xdg-open shim
+# Supports: WSL (Windows), macOS, and Linux
+
 if command -v powershell.exe >/dev/null 2>&1; then
-    # Join all arguments into one quoted string
+    # WSL: use powershell.exe to open in Windows
     args=""
     for a in "$@"; do
         args="$args '$a'"
     done
     powershell.exe -NoProfile -Command "Start-Process $args" >/dev/null 2>&1 || exit 1
     exit 0
-fi
-# Fallback to system xdg-open if present
-if command -v /usr/bin/xdg-open >/dev/null 2>&1; then
-    /usr/bin/xdg-open "$@" >/dev/null 2>&1 || exit 1
+elif command -v open >/dev/null 2>&1; then
+    # macOS: use the 'open' command
+    open "$@" >/dev/null 2>&1 || exit 1
+    exit 0
+elif command -v xdg-open >/dev/null 2>&1; then
+    # Linux: use xdg-open
+    xdg-open "$@" >/dev/null 2>&1 || exit 1
     exit 0
 fi
+
 echo "xdg-open shim: no opener available" >&2
 exit 1
 SH
         chmod +x "$HOME/.local/bin/xdg-open"
-        echo "✅ Installed WSL-aware xdg-open shim to ~/.local/bin/xdg-open"
+        echo "✅ Installed cross-platform xdg-open shim to ~/.local/bin/xdg-open"
 else
         echo "ℹ️  xdg-open shim already present: ~/.local/bin/xdg-open"
 fi
@@ -442,12 +454,12 @@ echo "🚀 Setting up automatic session restoration..."
 mkdir -p "$HOME/.config/autostart"
 
 # Create desktop entry for XDG autostart
-cat > "$HOME/.config/autostart/zmux-daemon.desktop" << 'DESKTOP_ENTRY'
+cat > "$HOME/.config/autostart/zmux-daemon.desktop" << DESKTOP_ENTRY
 [Desktop Entry]
 Type=Application
 Name=zmux Daemon
 Comment=Start tmux daemon with session restoration before any terminal opens
-Exec=/bin/bash -c '$HOME/.config/tmux/scripts/systemd-tmux-start.sh'
+Exec=/bin/bash -c "\$HOME/.config/tmux/scripts/systemd-tmux-start.sh"
 Terminal=false
 X-GNOME-Autostart-enabled=true
 Hidden=false

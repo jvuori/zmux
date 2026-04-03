@@ -144,35 +144,40 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 echo "✅ Configuration files updated"
 
 # ============================================================================
-# Ensure WSL-aware xdg-open shim is installed for tmux-open compatibility
+# Ensure xdg-open shim is installed (WSL + macOS + Linux compatible)
 # ============================================================================
 echo ""
-echo "🔧 Ensuring xdg-open shim is installed for WSL compatibility..."
+echo "🔧 Ensuring xdg-open shim is installed for cross-platform compatibility..."
 if [ ! -f "$HOME/.local/bin/xdg-open" ]; then
         mkdir -p "$HOME/.local/bin"
         cat > "$HOME/.local/bin/xdg-open" <<'SH'
 #!/bin/sh
-# WSL-aware xdg-open shim. If powershell.exe is available, use it to open
-# files/URLs in Windows default apps; otherwise fall back to system xdg-open.
+# Cross-platform xdg-open shim
+# Supports: WSL (Windows), macOS, and Linux
+
 if command -v powershell.exe >/dev/null 2>&1; then
-    # Join all arguments into one quoted string
+    # WSL: use powershell.exe to open in Windows
     args=""
     for a in "$@"; do
         args="$args '$a'"
     done
     powershell.exe -NoProfile -Command "Start-Process $args" >/dev/null 2>&1 || exit 1
     exit 0
-fi
-# Fallback to system xdg-open if present
-if command -v /usr/bin/xdg-open >/dev/null 2>&1; then
-    /usr/bin/xdg-open "$@" >/dev/null 2>&1 || exit 1
+elif command -v open >/dev/null 2>&1; then
+    # macOS: use the 'open' command
+    open "$@" >/dev/null 2>&1 || exit 1
+    exit 0
+elif command -v xdg-open >/dev/null 2>&1; then
+    # Linux: use xdg-open
+    xdg-open "$@" >/dev/null 2>&1 || exit 1
     exit 0
 fi
+
 echo "xdg-open shim: no opener available" >&2
 exit 1
 SH
         chmod +x "$HOME/.local/bin/xdg-open"
-        echo "✅ Installed WSL-aware xdg-open shim to ~/.local/bin/xdg-open"
+        echo "✅ Installed cross-platform xdg-open shim to ~/.local/bin/xdg-open"
 else
         echo "ℹ️  xdg-open shim already present: ~/.local/bin/xdg-open"
 fi

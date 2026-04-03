@@ -9,16 +9,20 @@ echo ""
 
 CLEANED=0
 
-# 1. Remove systemd service
+# 1. Remove systemd service (only on systemd systems)
 echo "1️⃣  Removing systemd service..."
-if systemctl --user is-enabled tmux.service 2>/dev/null; then
-    systemctl --user disable tmux.service 2>/dev/null && echo "   ✅ Disabled systemd service"
-    CLEANED=$((CLEANED + 1))
-fi
+if command -v systemctl >/dev/null 2>&1; then
+    if systemctl --user is-enabled tmux.service 2>/dev/null; then
+        systemctl --user disable tmux.service 2>/dev/null && echo "   ✅ Disabled systemd service"
+        CLEANED=$((CLEANED + 1))
+    fi
 
-if systemctl --user is-active tmux.service 2>/dev/null; then
-    systemctl --user stop tmux.service 2>/dev/null && echo "   ✅ Stopped systemd service"
-    CLEANED=$((CLEANED + 1))
+    if systemctl --user is-active tmux.service 2>/dev/null; then
+        systemctl --user stop tmux.service 2>/dev/null && echo "   ✅ Stopped systemd service"
+        CLEANED=$((CLEANED + 1))
+    fi
+else
+    echo "   ℹ️  systemd not available (skipping on non-systemd systems like macOS)"
 fi
 
 if [ -f "$HOME/.config/systemd/user/tmux.service" ]; then
@@ -35,9 +39,14 @@ for profile in ~/.profile ~/.zprofile ~/.bash_profile ~/.bashrc ~/.zshrc; do
         if grep -q "start-tmux-daemon.sh" "$profile" 2>/dev/null; then
             # Create backup
             cp "$profile" "${profile}.backup-$(date +%Y%m%d_%H%M%S)"
-            # Remove the zmux autostart lines
-            sed -i '/# zmux: Auto-start tmux daemon/d' "$profile"
-            sed -i '/start-tmux-daemon\.sh/d' "$profile"
+            # Remove the zmux autostart lines (handle both GNU and BSD sed)
+            if sed --version 2>/dev/null | grep -q GNU; then
+                sed -i '/# zmux: Auto-start tmux daemon/d' "$profile"
+                sed -i '/start-tmux-daemon\.sh/d' "$profile"
+            else
+                sed -i '' '/# zmux: Auto-start tmux daemon/d' "$profile"
+                sed -i '' '/start-tmux-daemon\.sh/d' "$profile"
+            fi
             echo "   ✅ Removed autostart from $profile (backup created)"
             CLEANED=$((CLEANED + 1))
         fi
@@ -53,18 +62,22 @@ if [ -f "$HOME/.config/tmux/scripts/start-tmux-daemon.sh" ]; then
     CLEANED=$((CLEANED + 1))
 fi
 
-# 4. Disable lingering if no other user services exist
+# 4. Disable lingering if no other user services exist (only on systemd systems)
 echo ""
 echo "4️⃣  Checking user lingering..."
-USER_SERVICES=$(systemctl --user list-units --type=service --state=enabled 2>/dev/null | wc -l)
-if [ "$USER_SERVICES" -le 1 ]; then
-    if loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
-        echo "   ℹ️  User lingering is enabled but no zmux services use it"
-        echo "   You can disable it manually if you don't need it:"
-        echo "   sudo loginctl disable-linger $USER"
+if command -v systemctl >/dev/null 2>&1; then
+    USER_SERVICES=$(systemctl --user list-units --type=service --state=enabled 2>/dev/null | wc -l)
+    if [ "$USER_SERVICES" -le 1 ]; then
+        if loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
+            echo "   ℹ️  User lingering is enabled but no zmux services use it"
+            echo "   You can disable it manually if you don't need it:"
+            echo "   sudo loginctl disable-linger $USER"
+        fi
+    else
+        echo "   ℹ️  User lingering still needed by other services"
     fi
 else
-    echo "   ℹ️  User lingering still needed by other services"
+    echo "   ℹ️  systemd not available (skipping on non-systemd systems like macOS)"
 fi
 
 # Summary

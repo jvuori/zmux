@@ -33,6 +33,54 @@ if [ ! -d "$TMUX_CONFIG_DIR" ]; then
 fi
 
 # ============================================================================
+# Cleanup Function (removes old zmux files while preserving user data)
+# ============================================================================
+
+cleanup_old_installation() {
+    local config_dir="$1"
+    local scripts_dir="$config_dir/scripts"
+    
+    # Only proceed if the directories exist
+    if [ ! -d "$config_dir" ]; then
+        return 0
+    fi
+    
+    echo "🧹 Cleaning up old installation files..."
+    
+    # List of known config files to remove (safe to delete - only zmux-provided files)
+    local config_files=(
+        "tmux.conf"
+        "keybindings.conf"
+        "lock-mode-bindings.conf"
+        "statusbar.conf"
+        "sessions.conf"
+        "plugins.conf"
+    )
+    
+    # Remove known config files
+    for file in "${config_files[@]}"; do
+        if [ -f "$config_dir/$file" ]; then
+            rm -f "$config_dir/$file"
+        fi
+    done
+    
+    # Remove .conf files from modes directory
+    if [ -d "$config_dir/modes" ]; then
+        find "$config_dir/modes" -maxdepth 1 -name "*.conf" -type f -delete 2>/dev/null || true
+    fi
+    
+    # Remove all .sh scripts from scripts directory (safe - only zmux scripts here)
+    if [ -d "$scripts_dir" ]; then
+        find "$scripts_dir" -maxdepth 1 -name "*.sh" -type f -delete 2>/dev/null || true
+    fi
+    
+    # Clean up tmux-open wrapper if it exists (custom wrapper we provide)
+    rm -f "$HOME/.local/bin/xdg-open" 2>/dev/null || true
+    
+    echo "   ✅ Old files removed (user data preserved)"
+}
+
+# ============================================================================
 # Step 1: Backup current configuration
 # ============================================================================
 
@@ -44,11 +92,14 @@ cp -r "$TMUX_CONFIG_DIR" "$BACKUP_DIR" 2>/dev/null || {
 echo "✅ Backup created: $BACKUP_DIR"
 
 # ============================================================================
-# Step 2: Update configuration files
+# Step 2: Clean up old files and update configuration
 # ============================================================================
 
 echo ""
 echo "📋 Updating configuration files..."
+
+# Clean up old files first (preserves user data)
+cleanup_old_installation "$TMUX_CONFIG_DIR"
 
 # Ensure directories exist
 mkdir -p "$TMUX_CONFIG_DIR"

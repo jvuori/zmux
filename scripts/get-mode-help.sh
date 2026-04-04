@@ -27,7 +27,7 @@ case "$KEY_TABLE" in
     ;;
   pane)
     # Ctrl+p: Pane mode
-    echo "#[fg=colour244][#[fg=colour81]n#[default]: new #[fg=colour244]| #[fg=colour81]d#[default]: below #[fg=colour244]| #[fg=colour81]r#[default]: right #[fg=colour244]| #[fg=colour81]f#[default]: zoom #[fg=colour244]| #[fg=colour81]x#[default]: kill #[fg=colour244]| #[fg=colour81]←↑↓→#[default]: nav#[fg=colour244]]"
+    echo "#[fg=colour244][#[fg=colour81]n#[default]: new #[fg=colour244]| #[fg=colour81]d#[default]: below #[fg=colour244]| #[fg=colour81]r#[default]: right #[fg=colour244]| #[fg=colour81]f#[default]: focus #[fg=colour244]| #[fg=colour81]x#[default]: kill #[fg=colour244]| #[fg=colour81]←↑↓→#[default]: nav#[fg=colour244]]"
     ;;
   move)
     # Ctrl+h: Move/swap panes mode

@@ -3,7 +3,10 @@
 # check-update.sh - Background release check for zmux
 # ============================================================================
 # Called on each tmux client-attached event via a set-hook in keybindings.conf.
-# Rate-limited to at most one GitHub API call per 24 hours.
+# Rate-limited to at most one GitHub API call per 24 hours (unless --force).
+#
+# Usage: check-update.sh [--force]
+#   --force: Bypass rate-limiting; always fetch latest version from GitHub
 #
 # Version file semantics:
 #   absent  → installed from a git work tree (no release tag stamped); always
@@ -15,6 +18,10 @@
 #
 # On any failure (no network, API rate-limit, etc.) → exits silently without
 # modifying any tmux option, so an existing notification stays visible.
+
+# Parse command-line options
+force_check=false
+[ "$1" = "--force" ] && force_check=true
 
 ZMUX_CONFIG_DIR="$HOME/.config/tmux"
 TIMESTAMP_FILE="$ZMUX_CONFIG_DIR/.update-check-ts"
@@ -34,20 +41,22 @@ else
     dev_install=true
 fi
 
-# Rate limit: at most one API call per 24 hours (86400 seconds).
+# Rate limit: at most one API call per 24 hours (86400 seconds), unless --force.
 now=$(date +%s 2>/dev/null) || exit 0
-if [ -f "$TIMESTAMP_FILE" ]; then
-    last=$(cat "$TIMESTAMP_FILE" 2>/dev/null | tr -d '[:space:]')
-    if [ -n "$last" ] && [ "$((now - last))" -lt 86400 ] 2>/dev/null; then
-        # Within the 24-hour window.
-        if $dev_install; then
-            # Dev install: skip the API call if the notification is already set.
-            cur=$(tmux display-message -p "#{@update_available}" 2>/dev/null)
-            [ -n "$cur" ] && exit 0
-            # Notification absent — fall through to fetch so the hint appears
-            # immediately after a fresh tmux start; don't reset the timer.
-        else
-            exit 0
+if [ "$force_check" = false ]; then
+    if [ -f "$TIMESTAMP_FILE" ]; then
+        last=$(cat "$TIMESTAMP_FILE" 2>/dev/null | tr -d '[:space:]')
+        if [ -n "$last" ] && [ "$((now - last))" -lt 86400 ] 2>/dev/null; then
+            # Within the 24-hour window.
+            if $dev_install; then
+                # Dev install: skip the API call if the notification is already set.
+                cur=$(tmux display-message -p "#{@update_available}" 2>/dev/null)
+                [ -n "$cur" ] && exit 0
+                # Notification absent — fall through to fetch so the hint appears
+                # immediately after a fresh tmux start; don't reset the timer.
+            else
+                exit 0
+            fi
         fi
     fi
 fi

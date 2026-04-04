@@ -14,6 +14,7 @@ zmux checks for new releases **once per 24 hours** at these events:
 - **When manually reloading config** — `Ctrl+a r` also re-evaluates available updates
 
 The check is **completely silent**:
+
 - No network errors are shown if the check fails
 - No messages appear on screen
 - The check happens in the background (`run-shell -b`)
@@ -23,12 +24,13 @@ The check is **completely silent**:
 
 zmux automatically detects your install type:
 
-| Install Type | `zmux-version` file | Behavior |
-|---|---|---|
+| Install Type        | `zmux-version` file                  | Behavior                                                          |
+| ------------------- | ------------------------------------ | ----------------------------------------------------------------- |
 | **Release tarball** | Contains version tag (e.g., `0.1.5`) | Compares against latest GitHub release; shows hint only if behind |
-| **Git work tree** | Absent / deleted | Always shows update hint for available packaged releases |
+| **Git work tree**   | Absent / deleted                     | Always shows update hint for available packaged releases          |
 
 When you run `install.sh` or `update.sh`:
+
 - If installing from a **release tarball** (has `VERSION` file), the version is recorded
 - If installing from a **git work tree** (no `VERSION` file), any stale `zmux-version` is removed
 
@@ -92,6 +94,7 @@ The check is rate-limited in two ways:
 2. **Event-based** — Only checks on the specific events listed above
 
 For dev installs (git work tree):
+
 - The rate limit applies to the API call
 - But the notification check (without API call) can run every time `check-update.sh` is called
 - This avoids the "notification flickering" on repeated tmux starts
@@ -114,6 +117,7 @@ Or simply ignore the notification and keep using your current version.
 ### "Network is unreachable" error
 
 If you see an error when pressing `Ctrl+u`, check:
+
 1. Internet connection is working
 2. `curl` or `wget` is installed (`which curl` or `which wget`)
 3. GitHub API is accessible from your location (not blocked by firewall)
@@ -127,6 +131,7 @@ If you see an error when pressing `Ctrl+u`, check:
 ### "Command not found: zmux" when updating
 
 If the popup shows "Command not found: zmux":
+
 1. Ensure `~/.local/bin` is in your `$PATH`
 2. Add to your `.bashrc` or `.zshrc`:
    ```bash

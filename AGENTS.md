@@ -118,3 +118,15 @@ Before committing any file creation or modification:
 1. Search for hardcoded home directories: `grep -r "/home/[^/]*/" --include="*.sh" --include="*.desktop" --include="*.conf"`
 2. Check all generated files (especially .desktop files from heredocs)
 3. Verify variables are properly escaped in heredocs (use single quotes for literal heredocs when needed)
+
+## IMPORTANT: Keybinding and Hint Maintenance
+
+**When modifying keybindings or mode hints**, see the dedicated skill at `.claude/skills/keybinding-maintenance/SKILL.md`. 
+
+This skill documents all file locations that must be synchronized:
+- `tmux/keybindings.conf` - The actual keybinding definitions
+- `tmux/statusbar.conf` - Where mode hints are hardcoded (NOT dynamically generated from scripts)
+- `docs/keymap.md` - User-facing reference documentation
+- `scripts/get-mode-help.sh` - Hint definitions (for reference/future architecture changes)
+
+**CRITICAL**: Statusbar hints are **hardcoded in tmux/statusbar.conf** within `if-shell` blocks for each platform. Changes to hints must be made in BOTH the WSL and Linux branches to maintain consistency. See skill for verification steps and common mistakes.

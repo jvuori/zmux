@@ -11,7 +11,8 @@
 - 🔌 **Plugin integration**: Essential tmux plugins pre-configured
 - 📦 **Easy installation**: One-command setup script
 - 🔄 **Session management**: Automatic session save/restore
-- 📚 **Comprehensive docs**: Philosophy, keymaps, and differences explained
+- � **Auto-update notifications**: Checks for new releases once per day; press `Ctrl+u` to update
+- �📚 **Comprehensive docs**: Philosophy, keymaps, and differences explained
 
 ## Quick Start
 

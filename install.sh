@@ -200,6 +200,8 @@ cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-co
 cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
 cp "$SCRIPT_DIR/scripts/lazygit-popup.sh" "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
+cp "$SCRIPT_DIR/scripts/check-update.sh" "$TMUX_CONFIG_DIR/scripts/check-update.sh"
+cp "$SCRIPT_DIR/scripts/run-update.sh" "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -222,6 +224,8 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/check-update.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 
 echo "✅ Configuration files copied"
 
@@ -656,9 +660,17 @@ chmod +x "$HOME/.local/bin/zmux"
 echo "✅ zmux command installed"
 
 # Write version file
+# VERSION is only present in release tarballs (it is gitignored and written
+# by the GitHub Actions release workflow).  When installing from a git work
+# tree the file is absent; in that case remove any stale zmux-version so
+# check-update.sh treats this as a development install and always shows the
+# update notification.
 if [ -f "$SCRIPT_DIR/VERSION" ]; then
     cp "$SCRIPT_DIR/VERSION" "$TMUX_CONFIG_DIR/zmux-version"
     echo "✅ Version recorded: $(cat "$SCRIPT_DIR/VERSION" | tr -d '[:space:]')"
+else
+    rm -f "$TMUX_CONFIG_DIR/zmux-version"
+    echo "⚠️  Git work tree install — no release version recorded (update hint will always appear)"
 fi
 
 # Hint about PATH

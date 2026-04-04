@@ -11,6 +11,7 @@ When modifying keybindings, hint texts, or mode-related configuration, changes m
 ## When This Skill Applies
 
 Activate when:
+
 - Adding, removing, or renaming keybindings
 - Changing hint text labels (e.g., "zoom" → "focus")
 - Modifying mode names or descriptions
@@ -20,14 +21,17 @@ Activate when:
 ## Critical File Locations for Keybinding Changes
 
 ### 1. **Keybinding Definitions** (Active - keybindings work)
+
 **File**: `tmux/keybindings.conf`
 
 **What to update**:
+
 - Key binding commands: `bind -T pane f ...`
 - Comments describing each binding
 - Mode names in key table switches
 
 **Example**:
+
 ```tmux
 # ❌ Old: Toggle fullscreen
 # ✅ New: Toggle fullscreen (focus pane)
@@ -35,9 +39,11 @@ bind -T pane f resize-pane -Z \; switch-client -T root
 ```
 
 ### 2. **Status Bar Hints - Hardcoded** (CRITICAL - What users see)
+
 **File**: `tmux/statusbar.conf`
 
 **What to update**:
+
 - Pane mode hint in `if-shell` conditions (appears twice for WSL and Linux)
 - Tab mode hints
 - Session mode hints
@@ -45,6 +51,7 @@ bind -T pane f resize-pane -Z \; switch-client -T root
 - Root mode keybinding legend
 
 **Example**:
+
 ```tmux
 # ❌ Old: #[fg=colour81]f#[default]: zoom
 # ✅ New: #[fg=colour81]f#[default]: focus
@@ -56,19 +63,23 @@ bind -T pane f resize-pane -Z \; switch-client -T root
 ```
 
 **Critical**: Status bar hints appear **twice** in statusbar.conf:
+
 1. Inside first `if-shell` (WSL detection)
 2. Inside second `if-shell` (Linux/macOS)
 
 Both must match - updating only one leaves inconsistency.
 
 ### 3. **Helper Script Hints** (Backup/Reference)
+
 **File**: `scripts/get-mode-help.sh`
 
 **What to update**:
+
 - Case statements for each mode (pane, tab, session, move, resize, git)
 - Echo output containing hint text
 
 **Example**:
+
 ```bash
 pane)
   # Ctrl+p: Pane mode
@@ -79,14 +90,17 @@ pane)
 **Note**: This script is NOT currently used by the status bar (hints are hardcoded in statusbar.conf), but it serves as documentation and could be called in the future via the statusbar. Keep it in sync with statusbar.conf for consistency.
 
 ### 4. **Documentation** (Optional but recommended)
+
 **Files**:
+
 - `docs/keymap.md` - User-facing keybinding reference table
 - `README.md` - Feature descriptions
 - Commit messages - Describe what changed
 
 **Example in docs/keymap.md**:
+
 ```markdown
-| `f`      | Toggle focus (fullscreen)                    |
+| `f` | Toggle focus (fullscreen) |
 ```
 
 ## Exact Locations Checklist
@@ -94,6 +108,7 @@ pane)
 Use this checklist when updating any keybinding or hint:
 
 ### For hint text changes (e.g., "zoom" → "focus"):
+
 - [ ] `tmux/statusbar.conf` - First `if-shell` block, pane mode hint
 - [ ] `tmux/statusbar.conf` - Second `if-shell` block, pane mode hint (same text)
 - [ ] `scripts/get-mode-help.sh` - Pane case statement
@@ -101,12 +116,14 @@ Use this checklist when updating any keybinding or hint:
 - [ ] `docs/keymap.md` - Description in Pane Mode table
 
 ### For new keybindings (e.g., adding `Ctrl+g` for git):
+
 - [ ] `tmux/keybindings.conf` - Define the binding and mode table
 - [ ] `tmux/statusbar.conf` - Add case condition for new key table (both if-shell branches)
 - [ ] `scripts/get-mode-help.sh` - Add case statement with hints
 - [ ] `docs/keymap.md` - Add to appropriate section
 
 ### For removing keybindings:
+
 - [ ] `tmux/keybindings.conf` - Remove binding and mode table
 - [ ] `tmux/statusbar.conf` - Remove case condition (both if-shell branches)
 - [ ] `scripts/get-mode-help.sh` - Remove case statement

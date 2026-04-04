@@ -35,17 +35,18 @@ git log <latest-tag>..HEAD --format="%an" | sort -u          # unique contributo
 
 Analyse the commits and changed files:
 
-| Signal | Bump |
-|--------|------|
+| Signal                                                                     | Bump      |
+| -------------------------------------------------------------------------- | --------- |
 | Breaking change, incompatible API or config change, major behaviour change | **major** |
-| New feature, new config option, new script, new plugin support | **minor** |
-| Bug fix, typo, documentation, refactor, small improvement, CI fix | **patch** |
+| New feature, new config option, new script, new plugin support             | **minor** |
+| Bug fix, typo, documentation, refactor, small improvement, CI fix          | **patch** |
 
 When in doubt, prefer the lower bump. This is a `0.x` project so `minor` covers most new features.
 
 ### Step 3 — Calculate new version
 
 Parse the current tag (e.g. `0.1.5`) and increment the appropriate component:
+
 - patch: `0.1.5` → `0.1.6`
 - minor: `0.1.5` → `0.2.0`
 - major: `0.1.5` → `1.0.0`
@@ -77,13 +78,26 @@ For the **GitHub release body** (used in Step 6), format it as Markdown with onl
 - <change 2>
 ```
 
-### Step 5 — Ask for confirmation
+### Step 5 — Ask for confirmation if needed
 
 Show the summary and ask:
 
 > Shall I create and push tag `0.1.6`? (yes / no, or suggest a different version)
 
 Wait for the user's response before doing anything with git.
+
+**Skip confirmation if:**
+
+- Only 1-3 commits since last tag
+- All commits are clearly patch-level (bug fixes, small improvements, documentation, typos)
+- Bump is unambiguous (patch only, no new features)
+- Example: 1 commit fixing a bug → proceed directly to Step 6, just inform the user
+
+**Ask for confirmation if:**
+
+- Any new features or ambiguous commits
+- Multiple commits that might justify a minor bump
+- Any breaking changes or major changes
 
 ### Step 6 — Create and push the tag, then pre-create the release (only after confirmation)
 

@@ -329,31 +329,24 @@ echo ""
 echo "📦 Updating plugins..."
 
 # Install/update plugins using TPM
-echo ""
-echo "📦 Updating plugins..."
-
 if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
-    echo "   Verifying plugin installation...\n"
-    
     # Use a temporary session for plugin operations if no sessions exist
     TEMP_SESSION_CREATED=false
     if ! tmux has-session 2>/dev/null; then
-        echo "   Creating temporary session for plugin installation..."
         tmux new-session -d -s __plugin_update_temp 2>/dev/null || true
         TEMP_SESSION_CREATED=true
         sleep 1
     fi
     
     if tmux has-session 2>/dev/null; then
-        echo "   Installing new plugins..."
-        # Source config and run install plugins
+        # Source config and run install plugins (suppress all output)
         tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
         sleep 1
-        tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || true
+        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/install_plugins >/dev/null 2>&1"' || true
         sleep 2
         
-        echo "   Updating existing plugins..."
-        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || true
+        # Update plugins (suppress all output)
+        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all >/dev/null 2>&1"' || true
         sleep 2
         
         # Clean up temporary session if we created it

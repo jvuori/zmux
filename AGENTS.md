@@ -66,6 +66,12 @@ When writing documentation or examples:
 - Never include actual usernames in path examples
 - If showing output, sanitize usernames to `$USER` or generic placeholders
 
+## Never Modify ~/.config Directly
+
+**NEVER** create, modify, or delete files directly in `~/.config`. All configuration files must live in this project repository and be deployed via the installation/update scripts.
+
+**Action**: Make all changes within this project directory, then run `./update.sh` to apply them to `~/.config` and verify the desired behavior.
+
 ## Key Binding Architecture: tmux vs ZLE
 
 When adding a new Ctrl+key binding that works both inside and outside tmux, there are **two separate layers** that must be kept consistent:

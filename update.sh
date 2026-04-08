@@ -33,6 +33,54 @@ if [ ! -d "$TMUX_CONFIG_DIR" ]; then
 fi
 
 # ============================================================================
+# Cleanup Function (removes old zmux files while preserving user data)
+# ============================================================================
+
+cleanup_old_installation() {
+    local config_dir="$1"
+    local scripts_dir="$config_dir/scripts"
+    
+    # Only proceed if the directories exist
+    if [ ! -d "$config_dir" ]; then
+        return 0
+    fi
+    
+    echo "🧹 Cleaning up old installation files..."
+    
+    # List of known config files to remove (safe to delete - only zmux-provided files)
+    local config_files=(
+        "tmux.conf"
+        "keybindings.conf"
+        "lock-mode-bindings.conf"
+        "statusbar.conf"
+        "sessions.conf"
+        "plugins.conf"
+    )
+    
+    # Remove known config files
+    for file in "${config_files[@]}"; do
+        if [ -f "$config_dir/$file" ]; then
+            rm -f "$config_dir/$file"
+        fi
+    done
+    
+    # Remove .conf files from modes directory
+    if [ -d "$config_dir/modes" ]; then
+        find "$config_dir/modes" -maxdepth 1 -name "*.conf" -type f -delete 2>/dev/null || true
+    fi
+    
+    # Remove all .sh scripts from scripts directory (safe - only zmux scripts here)
+    if [ -d "$scripts_dir" ]; then
+        find "$scripts_dir" -maxdepth 1 -name "*.sh" -type f -delete 2>/dev/null || true
+    fi
+    
+    # Clean up tmux-open wrapper if it exists (custom wrapper we provide)
+    rm -f "$HOME/.local/bin/xdg-open" 2>/dev/null || true
+    
+    echo "   ✅ Old files removed (user data preserved)"
+}
+
+# ============================================================================
 # Step 1: Backup current configuration
 # ============================================================================
 
@@ -44,11 +92,14 @@ cp -r "$TMUX_CONFIG_DIR" "$BACKUP_DIR" 2>/dev/null || {
 echo "✅ Backup created: $BACKUP_DIR"
 
 # ============================================================================
-# Step 2: Update configuration files
+# Step 2: Clean up old files and update configuration
 # ============================================================================
 
 echo ""
 echo "📋 Updating configuration files..."
+
+# Clean up old files first (preserves user data)
+cleanup_old_installation "$TMUX_CONFIG_DIR"
 
 # Ensure directories exist
 mkdir -p "$TMUX_CONFIG_DIR"
@@ -109,6 +160,8 @@ cp "$SCRIPT_DIR/scripts/toggle-lock-mode.sh" "$TMUX_CONFIG_DIR/scripts/toggle-lo
 cp "$SCRIPT_DIR/scripts/lock-mode-indicator.sh" "$TMUX_CONFIG_DIR/scripts/lock-mode-indicator.sh"
 cp "$SCRIPT_DIR/scripts/swap-pane-left.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
 cp "$SCRIPT_DIR/scripts/swap-pane-right.sh" "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
+cp "$SCRIPT_DIR/scripts/move-focus-or-tab-left.sh" "$TMUX_CONFIG_DIR/scripts/move-focus-or-tab-left.sh"
+cp "$SCRIPT_DIR/scripts/move-focus-or-tab-right.sh" "$TMUX_CONFIG_DIR/scripts/move-focus-or-tab-right.sh"
 cp "$SCRIPT_DIR/scripts/session-killer.sh" "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
 cp "$SCRIPT_DIR/scripts/fzf-git-branch.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 cp "$SCRIPT_DIR/scripts/git-branch-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
@@ -116,6 +169,8 @@ cp "$SCRIPT_DIR/scripts/fzf-git-commits.sh" "$TMUX_CONFIG_DIR/scripts/fzf-git-co
 cp "$SCRIPT_DIR/scripts/git-commits-popup.sh" "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
 cp "$SCRIPT_DIR/scripts/lazygit-popup.sh" "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
+cp "$SCRIPT_DIR/scripts/check-update.sh" "$TMUX_CONFIG_DIR/scripts/check-update.sh"
+cp "$SCRIPT_DIR/scripts/run-update.sh" "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -129,6 +184,8 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/toggle-lock-mode.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/lock-mode-indicator.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-left.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/swap-pane-right.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/move-focus-or-tab-left.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/move-focus-or-tab-right.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-killer.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-branch.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-branch-popup.sh"
@@ -136,39 +193,46 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/fzf-git-commits.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/git-commits-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/check-update.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 
 echo "✅ Configuration files updated"
 
 # ============================================================================
-# Ensure WSL-aware xdg-open shim is installed for tmux-open compatibility
+# Ensure xdg-open shim is installed (WSL + macOS + Linux compatible)
 # ============================================================================
 echo ""
-echo "🔧 Ensuring xdg-open shim is installed for WSL compatibility..."
+echo "🔧 Ensuring xdg-open shim is installed for cross-platform compatibility..."
 if [ ! -f "$HOME/.local/bin/xdg-open" ]; then
         mkdir -p "$HOME/.local/bin"
         cat > "$HOME/.local/bin/xdg-open" <<'SH'
 #!/bin/sh
-# WSL-aware xdg-open shim. If powershell.exe is available, use it to open
-# files/URLs in Windows default apps; otherwise fall back to system xdg-open.
+# Cross-platform xdg-open shim
+# Supports: WSL (Windows), macOS, and Linux
+
 if command -v powershell.exe >/dev/null 2>&1; then
-    # Join all arguments into one quoted string
+    # WSL: use powershell.exe to open in Windows
     args=""
     for a in "$@"; do
         args="$args '$a'"
     done
     powershell.exe -NoProfile -Command "Start-Process $args" >/dev/null 2>&1 || exit 1
     exit 0
-fi
-# Fallback to system xdg-open if present
-if command -v /usr/bin/xdg-open >/dev/null 2>&1; then
-    /usr/bin/xdg-open "$@" >/dev/null 2>&1 || exit 1
+elif command -v open >/dev/null 2>&1; then
+    # macOS: use the 'open' command
+    open "$@" >/dev/null 2>&1 || exit 1
+    exit 0
+elif command -v xdg-open >/dev/null 2>&1; then
+    # Linux: use xdg-open
+    xdg-open "$@" >/dev/null 2>&1 || exit 1
     exit 0
 fi
+
 echo "xdg-open shim: no opener available" >&2
 exit 1
 SH
         chmod +x "$HOME/.local/bin/xdg-open"
-        echo "✅ Installed WSL-aware xdg-open shim to ~/.local/bin/xdg-open"
+        echo "✅ Installed cross-platform xdg-open shim to ~/.local/bin/xdg-open"
 else
         echo "ℹ️  xdg-open shim already present: ~/.local/bin/xdg-open"
 fi
@@ -265,31 +329,24 @@ echo ""
 echo "📦 Updating plugins..."
 
 # Install/update plugins using TPM
-echo ""
-echo "📦 Updating plugins..."
-
 if [ -f ~/.tmux/plugins/tpm/bin/install_plugins ]; then
-    echo "   Verifying plugin installation...\n"
-    
     # Use a temporary session for plugin operations if no sessions exist
     TEMP_SESSION_CREATED=false
     if ! tmux has-session 2>/dev/null; then
-        echo "   Creating temporary session for plugin installation..."
         tmux new-session -d -s __plugin_update_temp 2>/dev/null || true
         TEMP_SESSION_CREATED=true
         sleep 1
     fi
     
     if tmux has-session 2>/dev/null; then
-        echo "   Installing new plugins..."
-        # Source config and run install plugins
+        # Source config and run install plugins (suppress all output)
         tmux source-file "$TMUX_CONFIG_DIR/tmux.conf" 2>/dev/null || true
         sleep 1
-        tmux run '~/.tmux/plugins/tpm/bin/install_plugins' 2>/dev/null || true
+        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/install_plugins >/dev/null 2>&1"' || true
         sleep 2
         
-        echo "   Updating existing plugins..."
-        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all"' 2>/dev/null || true
+        # Update plugins (suppress all output)
+        tmux run 'bash -c "~/.tmux/plugins/tpm/bin/update_plugins all >/dev/null 2>&1"' || true
         sleep 2
         
         # Clean up temporary session if we created it
@@ -344,8 +401,25 @@ chmod +x "$HOME/.local/bin/zmux"
 echo "✅ zmux command updated"
 
 # Write new version file
+# VERSION is only present in release tarballs (it is gitignored and written
+# by the GitHub Actions release workflow).  When updating from a git work
+# tree the file is absent; in that case remove any stale zmux-version so
+# check-update.sh treats this as a development install and always shows the
+# update notification.
 if [ -f "$SCRIPT_DIR/VERSION" ]; then
     cp "$SCRIPT_DIR/VERSION" "$TMUX_CONFIG_DIR/zmux-version"
     echo "✅ Version updated to: $(cat "$SCRIPT_DIR/VERSION" | tr -d '[:space:]')"
+else
+    rm -f "$TMUX_CONFIG_DIR/zmux-version"
+    echo "⚠️  Git work tree update — no release version recorded (update hint will always appear)"
 fi
+
+# ============================================================================
+# Run version check to update notification
+# ============================================================================
+# Re-evaluate whether an update is available now that the version file is
+# written. This ensures any running tmux session gets the updated
+# @update_available immediately (e.g., if upgraded from dev to release,
+# the hint disappears; if downgraded from release to dev, it reappears).
+bash "$TMUX_CONFIG_DIR/scripts/check-update.sh" 2>/dev/null || true
 

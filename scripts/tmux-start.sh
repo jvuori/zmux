@@ -18,14 +18,16 @@ MAX_WAIT=60  # Maximum seconds to wait for systemd restoration
 mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
 mkdir -p ~/.config/tmux/scripts
 
-# Ensure shutdown save service is enabled (in case systemd disabled it after reboot)
-if systemctl --user is-enabled tmux-shutdown-save.service >/dev/null 2>&1; then
-    : # Already enabled
-else
-    # Service exists but is disabled - enable it
-    if [ -f "$HOME/.config/systemd/user/tmux-shutdown-save.service" ]; then
-        systemctl --user daemon-reload 2>/dev/null
-        systemctl --user enable tmux-shutdown-save.service 2>/dev/null || true
+# Ensure shutdown save service is enabled (only on systemd systems)
+if command -v systemctl >/dev/null 2>&1; then
+    if systemctl --user is-enabled tmux-shutdown-save.service >/dev/null 2>&1; then
+        : # Already enabled
+    else
+        # Service exists but is disabled - enable it
+        if [ -f "$HOME/.config/systemd/user/tmux-shutdown-save.service" ]; then
+            systemctl --user daemon-reload 2>/dev/null
+            systemctl --user enable tmux-shutdown-save.service 2>/dev/null || true
+        fi
     fi
 fi
 

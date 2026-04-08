@@ -30,21 +30,26 @@ mkdir -p ~/.config/tmux/scripts
 
 # Wait for systemd user session to be ready before calling systemctl --user
 # The user session may not be fully initialized when autostart runs
-for i in $(seq 1 30); do
-    if systemctl --user is-system-running --wait >/dev/null 2>&1; then
-        break
-    fi
-    sleep 0.5
-done
+# Only do this on systemd systems
+if command -v systemctl >/dev/null 2>&1; then
+    for i in $(seq 1 30); do
+        if systemctl --user is-system-running --wait >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.5
+    done
+fi
 
-# Ensure shutdown save service is enabled (in case systemd disabled it after reboot)
-if systemctl --user is-enabled tmux-shutdown-save.service >/dev/null 2>&1; then
-    : # Already enabled
-else
-    # Service exists but is disabled - enable it
-    if [ -f "$HOME/.config/systemd/user/tmux-shutdown-save.service" ]; then
-        systemctl --user daemon-reload 2>/dev/null
-        systemctl --user enable tmux-shutdown-save.service 2>/dev/null || true
+# Ensure shutdown save service is enabled (only on systemd systems)
+if command -v systemctl >/dev/null 2>&1; then
+    if systemctl --user is-enabled tmux-shutdown-save.service >/dev/null 2>&1; then
+        : # Already enabled
+    else
+        # Service exists but is disabled - enable it
+        if [ -f "$HOME/.config/systemd/user/tmux-shutdown-save.service" ]; then
+            systemctl --user daemon-reload 2>/dev/null
+            systemctl --user enable tmux-shutdown-save.service 2>/dev/null || true
+        fi
     fi
 fi
 

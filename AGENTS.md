@@ -130,3 +130,16 @@ This skill documents all file locations that must be synchronized:
 - `scripts/get-mode-help.sh` - Hint definitions (for reference/future architecture changes)
 
 **CRITICAL**: Statusbar hints are **hardcoded in tmux/statusbar.conf** within `if-shell` blocks for each platform. Changes to hints must be made in BOTH the WSL and Linux branches to maintain consistency. See skill for verification steps and common mistakes.
+
+### Dynamic width conditionals must never be dropped
+
+The two `set -g status-right` lines in `statusbar.conf` are 500+ characters long. At the tail of each line are two `#{?#{e|>=|:#{client_width},...}` conditionals that hide the battery widget below 220 columns and time/date below 190 columns. These were accidentally dropped once (fixed in `91679fa`).
+
+**Rule**: When editing `statusbar.conf`, replace only the minimum substring that must change — never a large chunk of the line. After any edit, verify the conditionals are still present:
+
+```bash
+grep -o 'client_width' tmux/statusbar.conf | wc -l
+# Must output 4 (two conditionals × two if-shell branches)
+```
+
+If the count is less than 4, the edit dropped a conditional and must be corrected before committing.

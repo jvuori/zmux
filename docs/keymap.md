@@ -186,13 +186,13 @@ These are zmux-specific utilities:
 | ---------- | ------------------------------ |
 | `Ctrl+a r` | Reload configuration           |
 | `Ctrl+a s` | Session switcher (interactive) |
-| `Ctrl+u`   | Update zmux to the latest release |
+| `Ctrl+a U` | Update zmux to the latest release |
 
 ### Update notification
 
 `zmux` checks for new GitHub releases once per day (on tmux startup / client
-attach). When a newer version is available a `🔔 Ctrl+u: update (vX.Y.Z)`
-hint appears in the status bar root mode. Press `Ctrl+u` at any time to run
+attach). When a newer version is available a `🔔 Ctrl+a U: update (vX.Y.Z)`
+hint appears in the status bar root mode. Press `Ctrl+a U` at any time to run
 `zmux update` in an interactive popup — the hint disappears once the popup
 closes. The check is completely silent on network failures; no error messages
 are ever shown.

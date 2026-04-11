@@ -162,6 +162,30 @@ After making keybinding changes:
 
 ✅ **Update docs/keymap.md** - Keep user docs in sync
 
+## CRITICAL: Dynamic Width Conditionals in statusbar.conf
+
+The two `set -g status-right` lines in `statusbar.conf` are extremely long (500+ chars each). Every edit carries the risk of accidentally truncating the **dynamic width conditionals** at the tail of each line:
+
+```
+#{?#{e|>=|:#{client_width},220}, 🔋 <battery widget>,}#{?#{e|>=|:#{client_width},190}, ⏰ %H:%M 📅 %d %b %Y,}
+```
+
+These conditionals hide the battery widget below 220 columns and the time/date below 190 columns. If they are dropped the widgets are always visible and break narrow terminal layouts. This happened once already (fixed in commit `91679fa`).
+
+### Safe editing rule
+
+**Only replace the minimum substring that must change.** Never replace large swaths of the line. For example, to rename a hint from `Ctrl+u` to `Ctrl+a U`, replace only the literal string `Ctrl+u`, not the surrounding 200+ characters.
+
+### Mandatory post-edit verification
+
+After **any** edit to `tmux/statusbar.conf`, run:
+
+```bash
+grep -o 'client_width' tmux/statusbar.conf | wc -l
+```
+
+Expected output: **4** (two conditionals × two if-shell branches). If the count is less than 4, the edit dropped a conditional and must be fixed before committing.
+
 ## Implementation Pattern
 
 When making a keybinding hint change, follow this order:

@@ -186,16 +186,16 @@ These are zmux-specific utilities:
 | ---------- | ------------------------------ |
 | `Ctrl+a r` | Reload configuration           |
 | `Ctrl+a s` | Session switcher (interactive) |
-| `Ctrl+a U` | Update zmux to the latest release |
+| `Ctrl+a u` | Update zmux and tmux plugins |
 
 ### Update notification
 
 `zmux` checks for new GitHub releases once per day (on tmux startup / client
-attach). When a newer version is available a `🔔 Ctrl+a U: update (vX.Y.Z)`
-hint appears in the status bar root mode. Press `Ctrl+a U` at any time to run
-`zmux update` in an interactive popup — the hint disappears once the popup
-closes. The check is completely silent on network failures; no error messages
-are ever shown.
+attach). When a newer version is available a `🔔 Ctrl+a u: update (vX.Y.Z)`
+hint appears in the status bar root mode. Press `Ctrl+a u` at any time to
+update zmux (if a new release is available) and update all TPM plugins — the
+hint disappears once the popup closes. The check is completely silent on
+network failures; no error messages are ever shown.
 
 ## Plugin Keybindings
 
@@ -210,7 +210,6 @@ are ever shown.
 - `Ctrl+a w` - Interactive window switcher
 - `Ctrl+a p` - Interactive pane switcher
 - `Ctrl+a i` - Install plugins (TPM)
-- `Ctrl+a u` - Update plugins (TPM)
 
 Note: These may conflict with Zellij keybindings. The session switcher (`Ctrl+a s`) uses a custom script that tries tmux-fzf first, then falls back to a simple switcher.
 

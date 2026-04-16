@@ -40,6 +40,7 @@ run_test() {
 # Run test suites
 run_test "Installation Test" "tests/test-installation.sh"
 run_test "Mode & Keybinding Test" "tests/test-modes.sh"
+run_test "Client Hook Regression Test" "tests/test-client-attached-hooks.sh"
 run_test "Git Operations Test" "tests/test-git-operations.sh"
 run_test "Script Availability Test" "tests/test-scripts.sh"
 

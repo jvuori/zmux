@@ -70,7 +70,7 @@ done
 echo "✓ All required scripts present and executable"
 
 # Check if TPM is installed
-if [ ! -d "$HOME/.config/tmux/plugins/tpm" ]; then
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     echo "ERROR: TPM not installed"
     exit 1
 fi

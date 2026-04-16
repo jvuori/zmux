@@ -79,6 +79,10 @@ Press **`Ctrl+u`** at any time to manually update zmux:
 3. **Config reload** — `Ctrl+a r` binding also refreshes the notification state
 4. **update.sh** — Calls `check-update.sh` after updating version file
 
+Important: when multiple files define `client-attached` hooks, always append with
+`set-hook -ag`. A later `set-hook -g client-attached ...` replaces earlier handlers
+and can silently disable update checks.
+
 ### API
 
 - Fetches from `https://api.github.com/repos/jvuori/zmux/releases`

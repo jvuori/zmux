@@ -2,7 +2,8 @@
 # ============================================================================
 # check-update.sh - Background release check for zmux
 # ============================================================================
-# Called on each tmux client-attached event via a set-hook in keybindings.conf.
+# Called on each tmux client-attached event via hooks in tmux config.
+# Handlers must be appended with set-hook -ag so this check is not overwritten.
 # Rate-limited to at most one GitHub API call per 24 hours (unless --force).
 #
 # Usage: check-update.sh [--force]

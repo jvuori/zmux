@@ -69,14 +69,21 @@ Contributors: @name1, @name2
 
 Group related commits into bullet points — don't list every commit hash.
 
-For the **GitHub release body** (used in Step 6), format it as Markdown with only the changes — do **not** include a Contributors section. GitHub automatically renders a Contributors block below the release body; adding one manually causes a duplicate.
+For the **GitHub release body** (used in Step 6), format it as Markdown with the changes and a Contributors section:
 
 ```markdown
 ## What's new
 
 - <change 1>
 - <change 2>
+
+## Contributors
+
+- @contributor1
+- @contributor2
 ```
+
+**Important**: Always include a Contributors section listing all external/third-party contributors who participated in the release. GitHub's automatic contributor block may be incomplete or hidden. Explicit mention ensures proper attribution.
 
 ### Step 5 — Ask for confirmation if needed
 
@@ -131,6 +138,7 @@ Inform the user the release is live and the workflow is building the tarball.
 ## Important Rules
 
 - **Never create or push a tag without explicit user confirmation.**
+- **Always include external contributors in the GitHub release body** — use a Contributors section with their names/handles
 - Do not modify any files (no VERSION file, no CHANGELOG). The workflow stamps the version from the tag.
 - If the user suggests a different version number, use theirs — don't override their judgement.
 - If there are no commits since the last tag, tell the user and abort.

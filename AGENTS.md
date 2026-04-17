@@ -136,3 +136,33 @@ This skill documents all file locations that must be synchronized:
 - `scripts/get-mode-help.sh` - Hint definitions (for reference/future architecture changes)
 
 **CRITICAL**: Statusbar hints are **hardcoded in tmux/statusbar.conf** within `if-shell` blocks for each platform. Changes to hints must be made in BOTH the WSL and Linux branches to maintain consistency. See skill for verification steps and common mistakes.
+
+### Dynamic width conditionals must never be dropped
+
+The two `set -g status-right` lines in `statusbar.conf` are 500+ characters long. At the tail of each line are two `#{?#{e|>=|:#{client_width},...}` conditionals that hide the battery widget below 220 columns and time/date below 190 columns. These were accidentally dropped once (fixed in `91679fa`).
+
+**Rule**: When editing `statusbar.conf`, replace only the minimum substring that must change — never a large chunk of the line. After any edit, verify the conditionals are still present:
+
+```bash
+grep -o 'client_width' tmux/statusbar.conf | wc -l
+# Must output 4 (two conditionals × two if-shell branches)
+```
+
+If the count is less than 4, the edit dropped a conditional and must be corrected before committing.
+
+### Session label spacing must stay exact
+
+The top-row session block in `tmux/statusbar.conf` must keep this exact `status-left` pattern:
+
+- session icon
+- one space
+- `#S` (session name)
+- one trailing space before window tabs
+
+Expected form:
+
+```conf
+set -g status-left "#[fg=colour51,bold] 🖥️ #[fg=colour51,bold]#S "
+```
+
+Do not add a second space after the icon or remove the trailing space after `#S`, or the visual spacing between session label and tabs regresses.

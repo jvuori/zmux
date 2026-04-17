@@ -76,8 +76,6 @@ if [ -n "$TMUX" ]; then
     bind '"\C-a": ""'
     # Disable Ctrl+o (operate) - zmux uses it for session mode
     bind '"\C-o": ""'
-    # Disable Ctrl+u (kill-whole-line) - zmux uses it for zmux update
-    bind '"\C-u": ""'
     # Use Alt+Arrow for history instead
     bind '"\e[A": history-search-backward'
     bind '"\e[B": history-search-forward'
@@ -154,8 +152,6 @@ _zmux_configure_keys() {
             bindkey -r '^A'
             # Disable Ctrl+o (operate) - zmux uses it for session mode
             bindkey -r '^O'
-            # Disable Ctrl+u (kill-whole-line) - zmux uses it for zmux update
-            bindkey -r '^U'
             # Use Alt+Arrow for history instead
             bindkey '^[[A' history-search-backward
             bindkey '^[[B' history-search-forward

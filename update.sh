@@ -495,3 +495,14 @@ fi
 # the hint disappears; if downgraded from release to dev, it reappears).
 bash "$TMUX_CONFIG_DIR/scripts/check-update.sh" 2>/dev/null || true
 
+# ============================================================================
+# Remove legacy keybindings from any live tmux session
+# ============================================================================
+# pre-0.4.5 bound C-u (no prefix) to zmux update, conflicting with readline's
+# kill-whole-line. The new config has `unbind -qn C-u` so future config
+# sources clear it automatically, but we also clear it now so the current
+# session is fixed immediately without requiring a tmux restart.
+if [ -n "${TMUX:-}" ]; then
+    tmux unbind -n C-u 2>/dev/null || true
+fi
+

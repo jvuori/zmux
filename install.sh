@@ -202,6 +202,8 @@ cp "$SCRIPT_DIR/scripts/lazygit-popup.sh" "$TMUX_CONFIG_DIR/scripts/lazygit-popu
 cp "$SCRIPT_DIR/scripts/zmux.sh" "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 cp "$SCRIPT_DIR/scripts/check-update.sh" "$TMUX_CONFIG_DIR/scripts/check-update.sh"
 cp "$SCRIPT_DIR/scripts/run-update.sh" "$TMUX_CONFIG_DIR/scripts/run-update.sh"
+cp "$SCRIPT_DIR/scripts/notify-waiting.sh" "$TMUX_CONFIG_DIR/scripts/notify-waiting.sh"
+cp "$SCRIPT_DIR/scripts/notify-done.sh" "$TMUX_CONFIG_DIR/scripts/notify-done.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -226,6 +228,8 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/lazygit-popup.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/zmux.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/check-update.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/run-update.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/notify-waiting.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/notify-done.sh"
 
 echo "✅ Configuration files copied"
 
@@ -647,6 +651,74 @@ echo "For more information, see README.md or docs/AUTOSTART_SOLUTION.md"
 echo ""
 echo "Verification:"
 echo "  ./verify-autostart.sh          # Full verification"
+
+# ============================================================================
+# Step 10: Set up Claude Code notification hooks (optional, if installed)
+# ============================================================================
+
+setup_claude_code_hook() {
+    local notify_script="$HOME/.config/tmux/scripts/notify-waiting.sh"
+    local done_script="$HOME/.config/tmux/scripts/notify-done.sh"
+    local settings_file="$HOME/.claude/settings.json"
+
+    [ -d "$HOME/.claude" ] || return 0
+
+    echo ""
+    echo "🤖 Setting up Claude Code notification hooks..."
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "   ⚠️  python3 not found, skipping Claude Code hook setup"
+        return 0
+    fi
+
+    python3 - "$settings_file" "$notify_script" "$done_script" <<'PYEOF'
+import json, os, sys
+
+settings_file, notify_script, done_script = sys.argv[1], sys.argv[2], sys.argv[3]
+
+if os.path.exists(settings_file):
+    with open(settings_file, 'r') as f:
+        try:
+            settings = json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            settings = {}
+else:
+    settings = {}
+
+if "hooks" not in settings:
+    settings["hooks"] = {}
+
+def has_command(hooks_list, cmd):
+    return any(
+        any(h.get("command") == cmd for h in group.get("hooks", []))
+        for group in hooks_list
+    )
+
+def add_hook(hooks_list, cmd):
+    if not has_command(hooks_list, cmd):
+        hooks_list.append({"hooks": [{"type": "command", "command": cmd}]})
+        return True
+    return False
+
+if "Stop" not in settings["hooks"]:
+    settings["hooks"]["Stop"] = []
+stop_added = add_hook(settings["hooks"]["Stop"], notify_script)
+
+if "PreToolUse" not in settings["hooks"]:
+    settings["hooks"]["PreToolUse"] = []
+pre_added = add_hook(settings["hooks"]["PreToolUse"], done_script)
+
+if stop_added or pre_added:
+    with open(settings_file, 'w') as f:
+        json.dump(settings, f, indent=2)
+        f.write('\n')
+    print("   ✅ Claude Code notification hooks configured")
+else:
+    print("   ✅ Claude Code notification hooks already configured")
+PYEOF
+}
+
+setup_claude_code_hook
 
 # ============================================================================
 # Install zmux CLI to ~/.local/bin

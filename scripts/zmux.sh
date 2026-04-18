@@ -9,6 +9,7 @@
 #   zmux version          Print the installed zmux version
 #   zmux update           Check for updates and apply if available
 #   zmux doctor           Run the diagnostic helper
+#   zmux notify           Flash the tmux tab; drain stdin first if piped
 #   zmux help             Show this help
 
 set -e
@@ -154,6 +155,18 @@ cmd_update() {
     exit 0
 }
 
+cmd_notify() {
+    # If stdin is a pipe, drain it (forward to stdout so output stays visible)
+    if [ ! -t 0 ]; then
+        cat
+    fi
+
+    # Fire the flash notification (same behavior as the Claude Code Stop hook)
+    if [ -x "$ZMUX_SCRIPTS_DIR/notify-waiting.sh" ]; then
+        "$ZMUX_SCRIPTS_DIR/notify-waiting.sh"
+    fi
+}
+
 cmd_help() {
     cat <<'EOF'
 zmux - Zellij-like tmux configuration
@@ -166,13 +179,17 @@ Commands:
   version           Print the installed zmux version
   update            Check for a newer release and update if available
   doctor            Run diagnostic checks on your zmux setup
+  notify            Flash the tmux tab to signal completion.
+                    If stdin is a pipe, waits for it to finish first.
   help              Show this help message
 
 Examples:
-  zmux                  # open/attach tmux session
-  zmux version          # show version
-  zmux update           # self-update to latest release
-  zmux doctor           # diagnose problems
+  zmux                          # open/attach tmux session
+  zmux version                  # show version
+  zmux update                   # self-update to latest release
+  zmux doctor                   # diagnose problems
+  sleep 5 | zmux notify         # flash tab after sleep finishes
+  make build | zmux notify      # pass output through, then flash
 
 EOF
 }
@@ -189,6 +206,7 @@ case "$COMMAND" in
     version)      cmd_version      ;;
     update)       cmd_update       ;;
     doctor)       cmd_doctor "$@"  ;;
+    notify)       cmd_notify "$@"  ;;
     help|--help|-h) cmd_help       ;;
     *)
         echo "❌ Unknown command: $COMMAND"

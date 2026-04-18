@@ -9,9 +9,9 @@
 PANE="$TMUX_PANE"
 WINDOW=$(tmux display-message -t "$PANE" -p '#{window_id}' 2>/dev/null) || exit 0
 
-# Flash the pane background (inactive style only; active style stays normal).
+# Flash the pane background (both active and inactive panes).
 tmux set-option -pt "$PANE" window-style 'bg=colour240' 2>/dev/null || exit 0
-tmux set-option -pt "$PANE" window-active-style 'fg=default,bg=colour0' 2>/dev/null || true
+tmux set-option -pt "$PANE" window-active-style 'fg=default,bg=colour240' 2>/dev/null || true
 
 # Only set tab indicators if the user is not already in this window —
 # if they're already here they've implicitly seen the notification.
@@ -35,6 +35,7 @@ disown
     [ -n "$WINDOW" ] && tmux set-option -w -t "$WINDOW" @zmux_notify_flash 1 2>/dev/null
   done
   [ -n "$WINDOW" ] && tmux set-option -wu -t "$WINDOW" @zmux_notify_flash 2>/dev/null
-  [ -n "$WINDOW" ] && tmux set-option -w -t "$WINDOW" @zmux_notify_waiting 1 2>/dev/null
+  # Only leave the "i" badge if the user was not already in this window when the notification fired.
+  [ -n "$WINDOW" ] && [ "$ACTIVE_WINDOW" != "$WINDOW" ] && tmux set-option -w -t "$WINDOW" @zmux_notify_waiting 1 2>/dev/null
 ) &
 disown

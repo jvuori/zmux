@@ -254,7 +254,7 @@ if [ -n "$FZF_TMUX_CMD" ]; then
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
-        --bind 'start:down' \
+        --bind 'load:down' \
         --bind 'enter:accept' \
         --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
@@ -268,7 +268,7 @@ else
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
-        --bind 'start:down' \
+        --bind 'load:down' \
         --bind 'enter:accept' \
         --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-r:execute('"$RENAME_SCRIPT"' {})+abort' \

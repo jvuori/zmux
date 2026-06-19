@@ -84,11 +84,11 @@ build_session_list() {
             timestamp="0"
         fi
         
-        # Skip current session
+        # Skip current session (it will be shown as header-line at the top)
         if [ "$session_name" = "$current_session" ]; then
             continue
         fi
-        
+
         # Identify previous session (if last_session is available)
         if [ -n "$last_session" ] && [ "$session_name" = "$last_session" ]; then
             previous_session="$timestamp|$session_name"
@@ -96,29 +96,26 @@ build_session_list() {
             other_sessions_array+=("$timestamp|$session_name")
         fi
     done < "$temp_file"
-    
+
     # Sort other sessions by timestamp (most recent first)
     local IFS=$'\n'
     local sorted_others=($(printf '%s\n' "${other_sessions_array[@]}" | sort -rn))
     unset IFS
-    
-    # Build final list: previous first, then sorted others
-    local final_list=""
+
+    # Build final list: current session first (non-selectable header-line),
+    # then previous session (default selection), then sorted others
+    local final_list="$current_session"
     if [ -n "$previous_session" ]; then
         local prev_name=$(echo "$previous_session" | cut -d'|' -f2)
-        final_list="$prev_name"
+        final_list="$final_list"$'\n'"$prev_name"
     fi
-    
+
     # Add sorted other sessions
     for session_line in "${sorted_others[@]}"; do
         local session_name=$(echo "$session_line" | cut -d'|' -f2)
-        if [ -n "$final_list" ]; then
-            final_list="$final_list"$'\n'"$session_name"
-        else
-            final_list="$session_name"
-        fi
+        final_list="$final_list"$'\n'"$session_name"
     done
-    
+
     echo "$final_list"
 }
 
@@ -161,19 +158,15 @@ done < "$TEMP"
 IFS=$'\n' SORTED_OTHERS=($(printf '%s\n' "${OTHER_SESSIONS_ARRAY[@]}" | sort -rn))
 unset IFS
 
-FINAL_LIST=""
+FINAL_LIST="$CURRENT"
 if [ -n "$PREVIOUS_SESSION" ]; then
     PREV_NAME=$(echo "$PREVIOUS_SESSION" | cut -d'|' -f2)
-    FINAL_LIST="$PREV_NAME"
+    FINAL_LIST="$FINAL_LIST"$'\n'"$PREV_NAME"
 fi
 
 for session_line in "${SORTED_OTHERS[@]}"; do
     SESSION_NAME=$(echo "$session_line" | cut -d'|' -f2)
-    if [ -n "$FINAL_LIST" ]; then
-        FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
-    else
-        FINAL_LIST="$SESSION_NAME"
-    fi
+    FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
 done
 
 echo "$FINAL_LIST"
@@ -181,8 +174,8 @@ rm -f "$TEMP" 2>/dev/null
 RELOAD_EOF
 chmod +x "$RELOAD_SCRIPT"
 
-# If no sessions (other than current), exit
-if [ -z "$FINAL_LIST" ]; then
+# If no sessions other than current, exit (list has only the 1 header line)
+if [ "$(echo "$FINAL_LIST" | wc -l)" -le 1 ]; then
     tmux display-message "No other sessions available"
     exit 0
 fi
@@ -261,6 +254,7 @@ if [ -n "$FZF_TMUX_CMD" ]; then
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
+        --bind 'start:down' \
         --bind 'enter:accept' \
         --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
@@ -274,6 +268,7 @@ else
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
+        --bind 'start:down' \
         --bind 'enter:accept' \
         --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-r:execute('"$RENAME_SCRIPT"' {})+abort' \
@@ -303,8 +298,8 @@ CREATE_EOF
     exit 0
 fi
 
-# If user cancelled (ESC or Ctrl+C), exit
-if [ -z "$SELECTED" ]; then
+# If user cancelled (ESC or Ctrl+C), or selected the current session, just close
+if [ -z "$SELECTED" ] || [ "$SELECTED" = "$CURRENT_SESSION" ]; then
     exit 0
 fi
 

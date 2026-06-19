@@ -15,7 +15,7 @@ REQUIRED_SCRIPTS=(
     "tmux-start.sh"
     "show-help.sh"
     "get-mode-help.sh"
-    "capture-cursor-agent-session.sh"
+    "restore-pane-apps.sh"
     "toggle-lock-mode.sh"
     "lock-mode-indicator.sh"
     "swap-pane-left.sh"

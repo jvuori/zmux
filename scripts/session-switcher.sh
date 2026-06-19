@@ -126,6 +126,7 @@ build_session_list() {
 # 1. Previous session first (automatically selected)
 # 2. Then all other sessions sorted by recency (most recently visited first)
 TEMP_SESSIONS="/tmp/tmux_sessions_$$"
+NEW_SESSION_FILE="/tmp/tmux_new_session_$$"
 
 # Note: We need to handle sessions that have never been attached (empty last_attached timestamp)
 # Format from list-sessions is: "#{session_last_attached} #{session_name}"
@@ -256,23 +257,25 @@ chmod +x "$KILL_SCRIPT"
 # Try fzf-tmux first (best option), fallback to regular fzf
 if [ -n "$FZF_TMUX_CMD" ]; then
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 70%,60% \
-        --header="Select session (Enter: switch, Ctrl+x: kill)" \
+        --header="Select session (Enter: switch, Ctrl+n: new, Ctrl+x: kill)" \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
         --bind 'enter:accept' \
+        --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
         --bind 'ctrl-c:abort' \
         2>/dev/null)
 else
     # Fallback: use regular fzf (might not work in all contexts)
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_CMD" \
-        --header="Select session (Enter: switch, Ctrl+x: kill)" \
+        --header="Select session (Enter: switch, Ctrl+n: new, Ctrl+x: kill)" \
         --height=40% \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
         --bind 'enter:accept' \
+        --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-r:execute('"$RENAME_SCRIPT"' {})+abort' \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
         --bind 'ctrl-c:abort' \
@@ -281,6 +284,24 @@ fi
 
 # Clean up scripts
 rm -f "$PREVIEW_SCRIPT" "$KILL_SCRIPT" "$RELOAD_SCRIPT" "$TEMP_SESSIONS" 2>/dev/null
+
+# If user pressed Ctrl+n, open a small popup to prompt for a new session name
+if [ -f "$NEW_SESSION_FILE" ]; then
+    rm -f "$NEW_SESSION_FILE"
+    CREATE_SCRIPT="/tmp/tmux_create_session_$$"
+    cat > "$CREATE_SCRIPT" << 'CREATE_EOF'
+#!/bin/bash
+read -p "New session name: " name
+if [ -n "$name" ]; then
+    tmux new-session -d -s "$name" 2>/dev/null
+    tmux switch-client -t "$name" 2>/dev/null
+fi
+CREATE_EOF
+    chmod +x "$CREATE_SCRIPT"
+    tmux display-popup -E -w 40 -h 3 "$CREATE_SCRIPT"
+    rm -f "$CREATE_SCRIPT"
+    exit 0
+fi
 
 # If user cancelled (ESC or Ctrl+C), exit
 if [ -z "$SELECTED" ]; then

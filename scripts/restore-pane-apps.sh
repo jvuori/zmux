@@ -32,9 +32,6 @@ restore_pane_apps() {
             claude)
                 tmux send-keys -t "$pane" "claude --continue" Enter 2>/dev/null || true
                 ;;
-            lazygit)
-                tmux send-keys -t "$pane" "lazygit" Enter 2>/dev/null || true
-                ;;
             cursor-agent)
                 local cursor_id=$(extract_cursor_session_id "$pane")
                 [ -n "$cursor_id" ] && tmux display-message -t "$pane" "To resume: cursor-agent --resume=$cursor_id" 2>/dev/null || true
@@ -42,6 +39,13 @@ restore_pane_apps() {
             copilot)
                 local copilot_id=$(extract_copilot_session_id "$pane")
                 [ -n "$copilot_id" ] && tmux display-message -t "$pane" "To resume: copilot --resume=$copilot_id" 2>/dev/null || true
+                ;;
+            bash|zsh|sh|fish|ksh|dash|csh|tcsh)
+                # Shell — pane is already at a prompt, nothing to restore
+                ;;
+            *)
+                # Generic: re-launch by name (covers lazygit, htop, vim, etc.)
+                tmux send-keys -t "$pane" "$program" Enter 2>/dev/null || true
                 ;;
         esac
     done < "$PROGRAMS_FILE"

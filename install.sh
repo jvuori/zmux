@@ -562,12 +562,14 @@ TimeoutStopSec=5
 WantedBy=default.target
 SERVICE_FILE
 
-# Enable the service
+# Re-enable to clean up any stale WantedBy symlinks from old versions
 if command -v systemctl >/dev/null 2>&1; then
 	systemctl --user daemon-reload
+	systemctl --user disable tmux-shutdown-save.service 2>/dev/null || true
 	systemctl --user enable tmux-shutdown-save.service 2>/dev/null && \
 		echo "✅ Shutdown save service enabled" || \
 		echo "⚠️  Could not enable shutdown save service (will try again after first login)"
+	systemctl --user start tmux-shutdown-save.service 2>/dev/null || true
 else
 	echo "⚠️  systemctl not available, skipping service setup (non-systemd environment)"
 fi

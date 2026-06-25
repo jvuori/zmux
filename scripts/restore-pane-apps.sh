@@ -6,18 +6,19 @@
 
 PROGRAMS_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/pane-programs.txt"
 
-# Extract cursor-agent session ID (36-char UUID) from pane scrollback
-extract_cursor_session_id() {
-    local pane_id="$1"
-    local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
-    echo "$content" | grep -i "cursor-agent" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1
+# Extract a UUID from pane scrollback, optionally filtering by a keyword
+extract_uuid_from_scrollback() {
+    local pane_id="$1" keyword="$2"
+    tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null \
+        | grep -i "$keyword" \
+        | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' \
+        | head -1
 }
 
-# Extract copilot CLI session ID (36-char UUID) from pane scrollback
-extract_copilot_session_id() {
-    local pane_id="$1"
-    local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
-    echo "$content" | grep -i "copilot" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1
+# Strip a flag and its value (--flag=value or --flag) from a command string
+strip_flag() {
+    local cmd="$1" flag="$2"
+    echo "$cmd" | sed "s/\s*${flag}=[^ ]*//g; s/\s*${flag}\b//g" | tr -s ' ' | sed 's/^ //; s/ $//'
 }
 
 restore_pane_apps() {
@@ -27,20 +28,33 @@ restore_pane_apps() {
 
     while IFS='|' read -r pane program full_cmd; do
         [ -z "$pane" ] || [ -z "$program" ] && continue
-        # Fall back to program name if full_cmd is missing (old save file)
         [ -z "$full_cmd" ] && full_cmd="$program"
 
         case "$program" in
             claude)
-                tmux send-keys -t "$pane" "claude --continue" Enter 2>/dev/null || true
+                # Preserve original flags; strip any stale --continue and re-append it
+                local base_cmd=$(strip_flag "$full_cmd" "--continue")
+                tmux send-keys -t "$pane" "$base_cmd --continue" Enter 2>/dev/null || true
                 ;;
             cursor-agent)
-                local cursor_id=$(extract_cursor_session_id "$pane")
-                [ -n "$cursor_id" ] && tmux display-message -t "$pane" "To resume: cursor-agent --resume=$cursor_id" 2>/dev/null || true
+                # Preserve original flags; replace any stale --resume with the new UUID
+                local base_cmd=$(strip_flag "$full_cmd" "--resume")
+                local cursor_id=$(extract_uuid_from_scrollback "$pane" "cursor-agent")
+                if [ -n "$cursor_id" ]; then
+                    tmux send-keys -t "$pane" "$base_cmd --resume=$cursor_id" Enter 2>/dev/null || true
+                else
+                    tmux send-keys -t "$pane" "$base_cmd" Enter 2>/dev/null || true
+                fi
                 ;;
             copilot)
-                local copilot_id=$(extract_copilot_session_id "$pane")
-                [ -n "$copilot_id" ] && tmux display-message -t "$pane" "To resume: copilot --resume=$copilot_id" 2>/dev/null || true
+                # Preserve original flags; replace any stale --resume with the new UUID
+                local base_cmd=$(strip_flag "$full_cmd" "--resume")
+                local copilot_id=$(extract_uuid_from_scrollback "$pane" "copilot")
+                if [ -n "$copilot_id" ]; then
+                    tmux send-keys -t "$pane" "$base_cmd --resume=$copilot_id" Enter 2>/dev/null || true
+                else
+                    tmux send-keys -t "$pane" "$base_cmd" Enter 2>/dev/null || true
+                fi
                 ;;
             bash|zsh|sh|fish|ksh|dash|csh|tcsh)
                 # Shell — pane is already at a prompt, nothing to restore

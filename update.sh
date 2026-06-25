@@ -302,17 +302,17 @@ mkdir -p "$HOME/.config/systemd/user"
 # Copy the systemd service file
 cat > "$HOME/.config/systemd/user/tmux-shutdown-save.service" << 'SERVICE_FILE'
 [Unit]
-Description=Save tmux session before shutdown
-DefaultDependencies=no
-Before=shutdown.target reboot.target halt.target
+Description=Save tmux session before shutdown/logout
 
 [Service]
 Type=oneshot
-ExecStart=%h/.config/tmux/scripts/save-session-before-shutdown.sh
-TimeoutStartSec=5
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=%h/.config/tmux/scripts/save-session-before-shutdown.sh
+TimeoutStopSec=5
 
 [Install]
-WantedBy=halt.target reboot.target shutdown.target
+WantedBy=default.target
 SERVICE_FILE
 
 # Enable the service

@@ -1,15 +1,30 @@
 #!/bin/bash
 # restore-pane-apps.sh
 # After tmux session restore, re-launch apps that were running in each pane.
-# Reads pane-programs.txt written by save-pane-programs.sh at save time.
+# Reads program state from the tmux-resurrect 'last' file, which continuum keeps
+# up-to-date automatically every ~15 minutes. No separate save step needed.
 # Called on client-attached and after tmux-resurrect restore.
 
-PROGRAMS_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/pane-programs.txt"
+RESURRECT_LAST="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/last"
+
+# Resurrect file format (tab-separated, 11 fields):
+#   pane | session | window | win_active | win_flags | pane_idx | pane_title | :dir | pane_active | cmd | :full_cmd
+_read_resurrect_file() {
+    [ -e "$RESURRECT_LAST" ] || return 1
+    awk -F '\t' '$1 == "pane" {
+        pane = $2 ":" $3 "." $6
+        prog = $10
+        full = $11
+        sub(/^:/, "", full)
+        if (full == "") full = prog
+        print pane "|" prog "|" full
+    }' "$RESURRECT_LAST" 2>/dev/null
+}
 
 restore_pane_apps() {
-    if [ ! -f "$PROGRAMS_FILE" ]; then
-        return 0
-    fi
+    local data
+    data=$(_read_resurrect_file) || return 0
+    [ -z "$data" ] && return 0
 
     while IFS='|' read -r pane program full_cmd; do
         [ -z "$pane" ] || [ -z "$program" ] && continue
@@ -67,7 +82,7 @@ restore_pane_apps() {
                 tmux send-keys -t "$pane" "$full_cmd" Enter 2>/dev/null || true
                 ;;
         esac
-    done < "$PROGRAMS_FILE"
+    done <<< "$data"
 }
 
 # Wait for processes to start and output to appear after restore

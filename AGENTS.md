@@ -74,11 +74,17 @@ When writing documentation or examples:
 
 ## Pane Program Save/Restore Architecture
 
-The session restore system has two scripts that work together:
+Program state is read directly from the **tmux-resurrect save file** — no separate save step needed.
 
-- **`scripts/save-pane-programs.sh`** — runs at save time (Ctrl+a Ctrl+s and on shutdown). For every pane it records `session:window.pane|program_name|full_command_with_args` into `~/.local/share/tmux/resurrect/pane-programs.txt`. The full command is read from `/proc` via `ps` so arguments (e.g. `vim notes.txt`) are captured.
+tmux-resurrect already captures the full command for each pane (via `/proc/<pid>/cmdline`, the same technique as `linux_procfs.sh` strategy). tmux-continuum auto-saves this file every ~15 minutes. A systemd user service (`tmux-shutdown-save.service`) runs a final resurrect save at logout/shutdown to capture any state from the last auto-save cycle.
 
-- **`scripts/restore-pane-apps.sh`** — runs on `client-attached` and after Ctrl+a Ctrl+r. Reads the programs file and re-launches each pane's program. Skips panes already running a non-shell (prevents double-restore on re-attach).
+- **`scripts/restore-pane-apps.sh`** — runs on `client-attached` and after Ctrl+a Ctrl+r. Parses the resurrect `last` symlink for pane program data and re-launches each pane's program. Skips panes already running a non-shell (prevents double-restore on re-attach).
+
+The resurrect file format (tab-separated, 11 fields per `pane` line):
+```
+pane | session | window | win_active | win_flags | pane_idx | pane_title | :dir | pane_active | cmd | :full_cmd
+```
+`restore-pane-apps.sh` uses field 10 (`cmd`) and field 11 (`:full_cmd`, strip the leading colon).
 
 ### Restore logic per tool type
 
@@ -94,7 +100,7 @@ The session restore system has two scripts that work together:
 
 ### Adding a new tool with special restore logic
 
-Add a `case` entry in `restore-pane-apps.sh` matching the tool's `pane_current_command` value (the process basename). No changes needed to the save script — it captures all programs generically.
+Add a `case` entry in `restore-pane-apps.sh` matching the tool's `pane_current_command` value (the process basename). No save-side changes needed — the resurrect file captures all programs generically.
 
 ## Key Binding Architecture: tmux vs ZLE
 

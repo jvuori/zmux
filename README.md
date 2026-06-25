@@ -90,7 +90,7 @@ When sessions are restored, zmux also re-launches programs that were running in 
 - **Shells** — skipped; the pane is already at a prompt after restore.
 - **Destructive system tools** (`dd`, `mkfs`, `fdisk`, `apt`, etc.) — never auto-restarted.
 
-Program state is captured at save time (Ctrl+a Ctrl+s or on shutdown) by `save-pane-programs.sh` and read back by `restore-pane-apps.sh`.
+Program state comes from the tmux-resurrect save file, which tmux-continuum keeps up-to-date automatically every ~15 minutes. A final save also runs at logout/shutdown via a systemd user service (`tmux-shutdown-save.service`), capturing any changes from the last auto-save cycle.
 
 #### Manual Session Restoration
 

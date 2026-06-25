@@ -38,9 +38,6 @@ RESURRECT_SAVE="$HOME/.tmux/plugins/tmux-resurrect/scripts/save.sh"
 if [ -f "$RESURRECT_SAVE" ]; then
     "$RESURRECT_SAVE"
     echo "Session saved successfully"
-    # Save currently running program per pane for restore-pane-apps.sh
-    SAVE_PANE_PROGRAMS="$HOME/.config/tmux/scripts/save-pane-programs.sh"
-    [ -x "$SAVE_PANE_PROGRAMS" ] && "$SAVE_PANE_PROGRAMS"
 else
     echo "Warning: tmux-resurrect save script not found at $RESURRECT_SAVE"
     exit 1

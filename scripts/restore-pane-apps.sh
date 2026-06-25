@@ -6,6 +6,7 @@
 # Called on client-attached and after tmux-resurrect restore.
 
 RESURRECT_LAST="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/last"
+ORDER_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/session-order.txt"
 
 # Resurrect file format (tab-separated, 11 fields):
 #   pane | session | window | win_active | win_flags | pane_idx | pane_title | :dir | pane_active | cmd | :full_cmd
@@ -19,6 +20,14 @@ _read_resurrect_file() {
         if (full == "") full = prog
         print pane "|" prog "|" full
     }' "$RESURRECT_LAST" 2>/dev/null
+}
+
+restore_session_order() {
+    [ -f "$ORDER_FILE" ] || return 0
+    while IFS='|' read -r timestamp session_name; do
+        [ -z "$session_name" ] && continue
+        tmux set-option -t "$session_name" @zmux_last_used "$timestamp" 2>/dev/null || true
+    done < "$ORDER_FILE"
 }
 
 restore_pane_apps() {
@@ -88,4 +97,5 @@ restore_pane_apps() {
 # Wait for processes to start and output to appear after restore
 sleep 2
 
+restore_session_order
 restore_pane_apps

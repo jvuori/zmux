@@ -73,17 +73,16 @@ build_session_list() {
         return
     fi
     
-    while IFS='|' read -r timestamp activity session_name; do
+    while IFS='|' read -r timestamp saved_order activity session_name; do
         # Skip empty lines
         if [ -z "$session_name" ]; then
             continue
         fi
 
-        # Prefer last_attached; fall back to session_activity so sessions
-        # without attach history (e.g. just restored after reboot) still sort
-        # by actual usage rather than all landing at 0.
+        # Priority: session_last_attached (live) → @zmux_last_used (saved
+        # pre-reboot) → session_activity → 0.
         if [ -z "$timestamp" ]; then
-            timestamp="${activity:-0}"
+            timestamp="${saved_order:-${activity:-0}}"
         fi
         
         # Skip current session (it will be shown as header-line at the top)
@@ -130,7 +129,7 @@ NEW_SESSION_FILE="/tmp/tmux_new_session_$$"
 # Note: We need to handle sessions that have never been attached (empty last_attached timestamp)
 # Format from list-sessions is: "#{session_last_attached} #{session_name}"
 # Sessions without attachment history will have empty first field
-tmux list-sessions -F "#{session_last_attached}|#{session_activity}|#{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
+tmux list-sessions -F "#{session_last_attached}|#{@zmux_last_used}|#{session_activity}|#{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
 
 FINAL_LIST=$(build_session_list "$CURRENT_SESSION" "$LAST_SESSION" "$TEMP_SESSIONS")
 
@@ -141,14 +140,14 @@ cat > "$RELOAD_SCRIPT" << 'RELOAD_EOF'
 CURRENT=$(tmux display-message -p "#S" 2>/dev/null)
 LAST=$(tmux display-message -p "#{client_last_session}" 2>/dev/null)
 TEMP=$(mktemp)
-tmux list-sessions -F "#{session_last_attached}|#{session_activity}|#{session_name}" > "$TEMP" 2>/dev/null
+tmux list-sessions -F "#{session_last_attached}|#{@zmux_last_used}|#{session_activity}|#{session_name}" > "$TEMP" 2>/dev/null
 
 PREVIOUS_SESSION=""
 OTHER_SESSIONS_ARRAY=()
 
-while IFS='|' read -r TIMESTAMP ACTIVITY SESSION_NAME; do
+while IFS='|' read -r TIMESTAMP SAVED_ORDER ACTIVITY SESSION_NAME; do
     [ -z "$SESSION_NAME" ] && continue
-    [ -z "$TIMESTAMP" ] && TIMESTAMP="${ACTIVITY:-0}"
+    [ -z "$TIMESTAMP" ] && TIMESTAMP="${SAVED_ORDER:-${ACTIVITY:-0}}"
     [ "$SESSION_NAME" = "$CURRENT" ] && continue
     if [ -n "$LAST" ] && [ "$SESSION_NAME" = "$LAST" ]; then
         PREVIOUS_SESSION="$TIMESTAMP|$SESSION_NAME"

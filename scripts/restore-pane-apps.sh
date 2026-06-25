@@ -63,19 +63,13 @@ check_all_panes() {
 
         if [ -n "$cursor_id" ]; then
             tmux display-message -t "$pane" "To resume: cursor-agent --resume=$cursor_id"
-        fi
-
-        if [ -n "$copilot_id" ]; then
+        elif [ -n "$copilot_id" ]; then
             tmux display-message -t "$pane" "To resume: copilot --resume=$copilot_id"
-        fi
-
-        # Claude Code: no session ID needed, --continue picks up the last conversation
-        if detect_claude_pane "$pane"; then
+        elif detect_claude_pane "$pane"; then
+            # Claude Code: no session ID needed, --continue picks up the last conversation
             tmux send-keys -t "$pane" "claude --continue" Enter
-        fi
-
-        # LazyGit: just relaunch in the same directory
-        if detect_lazygit_pane "$pane"; then
+        elif detect_lazygit_pane "$pane"; then
+            # LazyGit: just relaunch in the same directory
             tmux send-keys -t "$pane" "lazygit" Enter
         fi
     done

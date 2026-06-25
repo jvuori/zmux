@@ -25,12 +25,29 @@ restore_pane_apps() {
 
         case "$program" in
             claude)
-                # --resume SESSION_ID and --continue are both self-sufficient — use as-is.
-                # Only add --continue when neither is present (plain 'claude' or 'claude --debug').
-                if echo "$full_cmd" | grep -qE -- '--continue|--resume'; then
-                    tmux send-keys -t "$pane" "$full_cmd" Enter 2>/dev/null || true
+                # Skip non-interactive modes — one-shot commands with no session to restore
+                if echo "$full_cmd" | grep -qE '(^| )(-p|--print|--bg|--background)( |=|$)'; then
+                    continue
+                fi
+
+                # Strip one-time flags whose side effects must not replay:
+                #   --fork-session  → would fork the session again instead of continuing the fork
+                #   --worktree/-w   → would create another worktree
+                local restore_cmd
+                restore_cmd=$(echo "$full_cmd" \
+                    | sed 's/[[:space:]]*--fork-session\b//g' \
+                    | sed 's/[[:space:]]*--worktree\b[[:space:]]*[^[:space:]-][^[:space:]]*//g' \
+                    | sed 's/[[:space:]]*--worktree\b//g' \
+                    | sed 's/[[:space:]]*-w\b[[:space:]]*[^[:space:]-][^[:space:]]*//g' \
+                    | sed 's/[[:space:]]*-w\b//g' \
+                    | tr -s ' ' | sed 's/^ //; s/ $//')
+
+                # --continue, --resume, --session-id, --from-pr all target a specific session
+                # and are self-sufficient — use as-is without adding --continue
+                if echo "$restore_cmd" | grep -qE -- '--continue|--resume|--session-id|--from-pr'; then
+                    tmux send-keys -t "$pane" "$restore_cmd" Enter 2>/dev/null || true
                 else
-                    tmux send-keys -t "$pane" "$full_cmd --continue" Enter 2>/dev/null || true
+                    tmux send-keys -t "$pane" "$restore_cmd --continue" Enter 2>/dev/null || true
                 fi
                 ;;
             cursor-agent|copilot)

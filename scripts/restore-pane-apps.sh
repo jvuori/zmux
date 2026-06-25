@@ -25,8 +25,10 @@ restore_pane_apps() {
         return 0
     fi
 
-    while IFS='|' read -r pane program; do
+    while IFS='|' read -r pane program full_cmd; do
         [ -z "$pane" ] || [ -z "$program" ] && continue
+        # Fall back to program name if full_cmd is missing (old save file)
+        [ -z "$full_cmd" ] && full_cmd="$program"
 
         case "$program" in
             claude)
@@ -43,9 +45,12 @@ restore_pane_apps() {
             bash|zsh|sh|fish|ksh|dash|csh|tcsh)
                 # Shell — pane is already at a prompt, nothing to restore
                 ;;
+            dd|mkfs|mkfs.*|fdisk|parted|gdisk|apt|apt-get|dpkg|pacman|yum|dnf|brew)
+                # Destructive or stateful system ops — never auto-restart
+                ;;
             *)
-                # Generic: re-launch by name (covers lazygit, htop, vim, etc.)
-                tmux send-keys -t "$pane" "$program" Enter 2>/dev/null || true
+                # Generic: re-launch with original arguments (vim file.txt, htop, etc.)
+                tmux send-keys -t "$pane" "$full_cmd" Enter 2>/dev/null || true
                 ;;
         esac
     done < "$PROGRAMS_FILE"

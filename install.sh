@@ -204,6 +204,7 @@ cp "$SCRIPT_DIR/scripts/check-update.sh" "$TMUX_CONFIG_DIR/scripts/check-update.
 cp "$SCRIPT_DIR/scripts/run-update.sh" "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 cp "$SCRIPT_DIR/scripts/notify-waiting.sh" "$TMUX_CONFIG_DIR/scripts/notify-waiting.sh"
 cp "$SCRIPT_DIR/scripts/notify-done.sh" "$TMUX_CONFIG_DIR/scripts/notify-done.sh"
+cp "$SCRIPT_DIR/scripts/save-pane-programs.sh" "$TMUX_CONFIG_DIR/scripts/save-pane-programs.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/session-switcher.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/doctor.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/tmux-start.sh"
@@ -230,6 +231,7 @@ chmod +x "$TMUX_CONFIG_DIR/scripts/check-update.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/run-update.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/notify-waiting.sh"
 chmod +x "$TMUX_CONFIG_DIR/scripts/notify-done.sh"
+chmod +x "$TMUX_CONFIG_DIR/scripts/save-pane-programs.sh"
 
 echo "✅ Configuration files copied"
 

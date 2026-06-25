@@ -1,81 +1,53 @@
 #!/bin/bash
 # restore-pane-apps.sh
 # After tmux session restore, re-launch apps that were running in each pane.
+# Reads pane-programs.txt written by save-pane-programs.sh at save time.
 # Called on client-attached and after tmux-resurrect restore.
 
-# Extract cursor-agent session ID (36-char UUID with hyphens)
+PROGRAMS_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/pane-programs.txt"
+
+# Extract cursor-agent session ID (36-char UUID) from pane scrollback
 extract_cursor_session_id() {
     local pane_id="$1"
     local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
-
-    if [ -z "$content" ] || ! echo "$content" | grep -qi "cursor-agent\|resume.*session"; then
-        return 1
-    fi
-
-    local session_id=$(echo "$content" | grep -i "cursor-agent" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1)
-
-    if [ -n "$session_id" ]; then
-        echo "$session_id"
-        return 0
-    fi
-
-    return 1
+    echo "$content" | grep -i "cursor-agent" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1
 }
 
-# Extract copilot CLI session ID (36-char UUID)
+# Extract copilot CLI session ID (36-char UUID) from pane scrollback
 extract_copilot_session_id() {
     local pane_id="$1"
     local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
+    echo "$content" | grep -i "copilot" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1
+}
 
-    if [ -z "$content" ] || ! echo "$content" | grep -qi "copilot"; then
-        return 1
-    fi
-
-    local session_id=$(echo "$content" | grep -i "copilot" | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -1)
-
-    if [ -n "$session_id" ]; then
-        echo "$session_id"
+restore_pane_apps() {
+    if [ ! -f "$PROGRAMS_FILE" ]; then
         return 0
     fi
 
-    return 1
-}
+    while IFS='|' read -r pane program; do
+        [ -z "$pane" ] || [ -z "$program" ] && continue
 
-# Detect if pane had Claude Code running
-detect_claude_pane() {
-    local pane_id="$1"
-    local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
-    echo "$content" | grep -qi "claude" && return 0 || return 1
-}
-
-# Detect if pane had lazygit running
-detect_lazygit_pane() {
-    local pane_id="$1"
-    local content=$(tmux capture-pane -t "$pane_id" -p -S -100 2>/dev/null)
-    echo "$content" | grep -qi "lazygit" && return 0 || return 1
-}
-
-# Re-launch apps in all restored panes
-check_all_panes() {
-    tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index}" 2>/dev/null | while read -r pane; do
-        local cursor_id=$(extract_cursor_session_id "$pane")
-        local copilot_id=$(extract_copilot_session_id "$pane")
-
-        if [ -n "$cursor_id" ]; then
-            tmux display-message -t "$pane" "To resume: cursor-agent --resume=$cursor_id"
-        elif [ -n "$copilot_id" ]; then
-            tmux display-message -t "$pane" "To resume: copilot --resume=$copilot_id"
-        elif detect_claude_pane "$pane"; then
-            # Claude Code: no session ID needed, --continue picks up the last conversation
-            tmux send-keys -t "$pane" "claude --continue" Enter
-        elif detect_lazygit_pane "$pane"; then
-            # LazyGit: just relaunch in the same directory
-            tmux send-keys -t "$pane" "lazygit" Enter
-        fi
-    done
+        case "$program" in
+            claude)
+                tmux send-keys -t "$pane" "claude --continue" Enter 2>/dev/null || true
+                ;;
+            lazygit)
+                tmux send-keys -t "$pane" "lazygit" Enter 2>/dev/null || true
+                ;;
+            cursor-agent)
+                local cursor_id=$(extract_cursor_session_id "$pane")
+                [ -n "$cursor_id" ] && tmux display-message -t "$pane" "To resume: cursor-agent --resume=$cursor_id" 2>/dev/null || true
+                ;;
+            copilot)
+                local copilot_id=$(extract_copilot_session_id "$pane")
+                [ -n "$copilot_id" ] && tmux display-message -t "$pane" "To resume: copilot --resume=$copilot_id" 2>/dev/null || true
+                ;;
+        esac
+    done < "$PROGRAMS_FILE"
 }
 
 # Wait for processes to start and output to appear after restore
 sleep 2
 
-check_all_panes
+restore_pane_apps

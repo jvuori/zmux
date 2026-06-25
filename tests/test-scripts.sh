@@ -16,6 +16,7 @@ REQUIRED_SCRIPTS=(
     "show-help.sh"
     "get-mode-help.sh"
     "restore-pane-apps.sh"
+    "save-pane-programs.sh"
     "toggle-lock-mode.sh"
     "lock-mode-indicator.sh"
     "swap-pane-left.sh"

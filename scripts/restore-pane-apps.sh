@@ -25,8 +25,9 @@ restore_pane_apps() {
 
         case "$program" in
             claude)
-                # Add --continue if not already present; preserve all other flags
-                if echo "$full_cmd" | grep -q -- '--continue'; then
+                # --resume SESSION_ID and --continue are both self-sufficient — use as-is.
+                # Only add --continue when neither is present (plain 'claude' or 'claude --debug').
+                if echo "$full_cmd" | grep -qE -- '--continue|--resume'; then
                     tmux send-keys -t "$pane" "$full_cmd" Enter 2>/dev/null || true
                 else
                     tmux send-keys -t "$pane" "$full_cmd --continue" Enter 2>/dev/null || true

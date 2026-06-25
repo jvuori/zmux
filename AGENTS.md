@@ -72,6 +72,30 @@ When writing documentation or examples:
 
 **Action**: Make all changes within this project directory, then run `./update.sh` to apply them to `~/.config` and verify the desired behavior.
 
+## Pane Program Save/Restore Architecture
+
+The session restore system has two scripts that work together:
+
+- **`scripts/save-pane-programs.sh`** — runs at save time (Ctrl+a Ctrl+s and on shutdown). For every pane it records `session:window.pane|program_name|full_command_with_args` into `~/.local/share/tmux/resurrect/pane-programs.txt`. The full command is read from `/proc` via `ps` so arguments (e.g. `vim notes.txt`) are captured.
+
+- **`scripts/restore-pane-apps.sh`** — runs on `client-attached` and after Ctrl+a Ctrl+r. Reads the programs file and re-launches each pane's program. Skips panes already running a non-shell (prevents double-restore on re-attach).
+
+### Restore logic per tool type
+
+**Generic programs**: re-launched with the full saved command as-is (`vim notes.txt`, `htop`, `lazygit`, etc.).
+
+**Shells** (`bash`, `zsh`, etc.): skipped — pane is already at a prompt.
+
+**Blocklisted** (`dd`, `mkfs`, `fdisk`, `apt`, etc.): never auto-restarted.
+
+**Claude Code**: add `--continue` unless the command already contains a session flag (`--continue`, `--resume`, `--session-id`, `--from-pr`). Strip one-time flags that must not replay: `--fork-session` (would fork again) and `--worktree`/`-w` (would create another worktree). Skip non-interactive modes (`--print`/`-p`, `--bg`).
+
+**Cursor Agent / Copilot**: use the saved command as-is. Their session UUIDs live in the tool's own state and survive reboots, so `--resume=UUID` remains valid.
+
+### Adding a new tool with special restore logic
+
+Add a `case` entry in `restore-pane-apps.sh` matching the tool's `pane_current_command` value (the process basename). No changes needed to the save script — it captures all programs generically.
+
 ## Key Binding Architecture: tmux vs ZLE
 
 When adding a new Ctrl+key binding that works both inside and outside tmux, there are **two separate layers** that must be kept consistent:

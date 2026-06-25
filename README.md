@@ -80,6 +80,18 @@ To verify the setup:
 ./verify-autostart.sh
 ```
 
+#### Automatic Program Restoration
+
+When sessions are restored, zmux also re-launches programs that were running in each pane — not just the shell prompt:
+
+- **Claude Code** — resumes the last conversation via `claude --continue`. Extra flags like `--debug` are preserved. If launched with `--resume SESSION_ID` or `--session-id`, the original command is used as-is.
+- **Cursor Agent / Copilot** — re-launched with the original command (their session UUIDs live in the tool's own state and survive reboots).
+- **Any other program** — re-launched with its original arguments: `vim notes.txt` restores to that file, `htop` restarts normally, etc.
+- **Shells** — skipped; the pane is already at a prompt after restore.
+- **Destructive system tools** (`dd`, `mkfs`, `fdisk`, `apt`, etc.) — never auto-restarted.
+
+Program state is captured at save time (Ctrl+a Ctrl+s or on shutdown) by `save-pane-programs.sh` and read back by `restore-pane-apps.sh`.
+
 #### Manual Session Restoration
 
 You can also manually restore sessions using the script:

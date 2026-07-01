@@ -11,8 +11,8 @@
 - 🔌 **Plugin integration**: Essential tmux plugins pre-configured
 - 📦 **Easy installation**: One-command setup script
 - 🔄 **Session management**: Automatic session save/restore
-- � **Auto-update notifications**: Checks for new releases once per day; press `Ctrl+u` to update
-- �📚 **Comprehensive docs**: Philosophy, keymaps, and differences explained
+- 🔔 **Auto-update notifications**: Checks for new releases once per day; press `Ctrl+a u` to update
+- 📚 **Comprehensive docs**: Philosophy, keymaps, and differences explained
 
 ## Quick Start
 
@@ -52,6 +52,7 @@ zmux                  Open / attach to a tmux session
 zmux start            Same as above
 zmux version          Print the installed version
 zmux update           Check for a newer release and self-update
+zmux notify           Send a task-completion notification (flash + sound)
 zmux doctor           Run diagnostic checks
 zmux help             Show help
 ```
@@ -90,7 +91,7 @@ When sessions are restored, zmux also re-launches programs that were running in 
 - **Shells** — skipped; the pane is already at a prompt after restore.
 - **Destructive system tools** (`dd`, `mkfs`, `fdisk`, `apt`, etc.) — never auto-restarted.
 
-Program state comes from the tmux-resurrect save file, which tmux-continuum keeps up-to-date automatically every ~15 minutes. A final save also runs at logout/shutdown via a systemd user service (`tmux-shutdown-save.service`), capturing any changes from the last auto-save cycle.
+Program state comes from the tmux-resurrect save file, which tmux-continuum keeps up-to-date automatically every ~5 minutes. A final save also runs at logout/shutdown via a systemd user service (`tmux-shutdown-save.service`), capturing any changes from the last auto-save cycle.
 
 #### Manual Session Restoration
 
@@ -149,7 +150,7 @@ After installing or updating zmux, reload the configuration in active tmux sessi
 ./reload-config.sh
 ```
 
-Or manually in tmux: press prefix, then type `:source-file ~/.tmux.conf`
+Or manually in tmux: press prefix, then type `:source-file ~/.config/tmux/tmux.conf`
 
 ### Shell Configuration (Required!)
 
@@ -219,9 +220,10 @@ $ git checkout feature/new-api [cursor here]
 
 ### Quick Actions
 
-- **Quit**: `Ctrl+q` - Kill all sessions
+- **Detach**: `Ctrl+q` - Detach from current client (keeps daemon running; prompts for confirmation)
 - **Reload config**: `Ctrl+a r` (custom, not in Zellij)
-- **Session switcher**: `Ctrl+a s` (custom, not in Zellij)
+- **Update zmux**: `Ctrl+a u` - Run zmux update in a popup
+- **Session switcher**: `Ctrl+o w` - Interactive fzf session switcher (in Session mode)
 
 See [docs/keymap.md](docs/keymap.md) for the complete keymap reference.
 
@@ -276,11 +278,10 @@ zmux includes the following plugins (installed via TPM):
 
 - **tmux-sensible** - Sensible defaults
 - **tmux-resurrect** - Save/restore sessions (prefix + Ctrl+s save, prefix + Ctrl+r restore)
-- **tmux-continuum** - Auto-save sessions (autosave every 15 minutes, auto-restore on start)
+- **tmux-continuum** - Auto-save sessions (autosave every 5 minutes, auto-restore on start)
 
 ### Discoverability & UX Guidance
 
-- **tmux-which-key** - Keybinding hints (shows available keys after prefix)
 - **tmux-prefix-highlight** - Prefix indicator (shows in status bar when prefix is active)
 
 ### Sessions, Windows & Navigation
@@ -291,8 +292,8 @@ zmux includes the following plugins (installed via TPM):
 
 - **tmux-yank** - Better clipboard integration
 - **tmux-open** - Open files/URLs
-- **tmux-copycat** - Enhanced search
 - **tmux-pain-control** - Better pane navigation
+- **tmux-battery** - Battery status in status bar
 
 ### Installing Plugins
 
@@ -377,7 +378,7 @@ This happens when your shell intercepts the keys before tmux can handle them.
 3. Reload tmux config (in tmux, press current prefix, then):
 
    ```
-   :source-file ~/.tmux.conf
+   :source-file ~/.config/tmux/tmux.conf
    ```
 
 4. Test: `Ctrl+p` should enter pane mode (not show previous command)

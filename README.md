@@ -52,7 +52,7 @@ zmux                  Open / attach to a tmux session
 zmux start            Same as above
 zmux version          Print the installed version
 zmux update           Check for a newer release and self-update
-zmux notify           Send a task-completion notification (flash + sound)
+zmux notify           Flash the tmux tab to signal completion (see docs/notify.md)
 zmux doctor           Run diagnostic checks
 zmux help             Show help
 ```
@@ -330,6 +330,7 @@ This will:
 - [Philosophy](docs/philosophy.md) - Design principles and goals
 - [Keymap Reference](docs/keymap.md) - Complete keybinding guide
 - [Differences vs Zellij](docs/differences-vs-zellij.md) - What's different and why
+- [zmux notify](docs/notify.md) - Tab flash notifications for long-running commands and Claude Code
 
 ## Requirements
 

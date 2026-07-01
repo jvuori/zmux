@@ -81,6 +81,28 @@ else
     echo "✅ lazygit is installed (git UI available)"
 fi
 
+# Check for CSI u / Kitty keyboard protocol vs tmux extended-keys compatibility
+# WezTerm with enable_csi_u_key_encoding=true and neovim/yazi installs commonly enable CSI u.
+# When active, Ctrl+G sends \x1b[7u instead of \x07. tmux needs extended-keys on to decode this.
+CSI_U_SOURCE=""
+if [ -f "$HOME/.config/wezterm/wezterm.lua" ] && grep -q "enable_csi_u_key_encoding.*true" "$HOME/.config/wezterm/wezterm.lua" 2>/dev/null; then
+    CSI_U_SOURCE="WezTerm (enable_csi_u_key_encoding=true in ~/.config/wezterm/wezterm.lua)"
+elif [ "${TERM_PROGRAM}" = "WezTerm" ] || [ -n "${WEZTERM_PANE}" ]; then
+    CSI_U_SOURCE="WezTerm (detected via environment)"
+fi
+
+if [ -n "$CSI_U_SOURCE" ]; then
+    TMUX_EXTENDED=$(tmux show-options -gv extended-keys 2>/dev/null)
+    if [ "$TMUX_EXTENDED" = "on" ] || [ "$TMUX_EXTENDED" = "always" ]; then
+        echo "✅ CSI u key encoding ($CSI_U_SOURCE) compatible with tmux extended-keys=$TMUX_EXTENDED"
+    else
+        echo "❌ ERROR: $CSI_U_SOURCE sends CSI u key sequences, but tmux extended-keys is off"
+        echo "   Ctrl+G and other modal bindings will silently fail."
+        echo "   Fix: ensure 'set -g extended-keys on' is in ~/.config/tmux/tmux.conf and reload tmux."
+        ERRORS=$((ERRORS + 1))
+    fi
+fi
+
 # Check tmux server
 if tmux has-session 2>/dev/null; then
     echo "✅ tmux server is running"

@@ -73,22 +73,23 @@ build_session_list() {
         return
     fi
     
-    while IFS='|' read -r timestamp session_name; do
+    while IFS='|' read -r timestamp saved_order activity session_name; do
         # Skip empty lines
         if [ -z "$session_name" ]; then
             continue
         fi
-        
-        # If timestamp is empty, use 0 (these sessions are sorted to the end)
+
+        # Priority: session_last_attached (live) → @zmux_last_used (saved
+        # pre-reboot) → session_activity → 0.
         if [ -z "$timestamp" ]; then
-            timestamp="0"
+            timestamp="${saved_order:-${activity:-0}}"
         fi
         
-        # Skip current session
+        # Skip current session (it will be shown as header-line at the top)
         if [ "$session_name" = "$current_session" ]; then
             continue
         fi
-        
+
         # Identify previous session (if last_session is available)
         if [ -n "$last_session" ] && [ "$session_name" = "$last_session" ]; then
             previous_session="$timestamp|$session_name"
@@ -96,29 +97,26 @@ build_session_list() {
             other_sessions_array+=("$timestamp|$session_name")
         fi
     done < "$temp_file"
-    
+
     # Sort other sessions by timestamp (most recent first)
     local IFS=$'\n'
     local sorted_others=($(printf '%s\n' "${other_sessions_array[@]}" | sort -rn))
     unset IFS
-    
-    # Build final list: previous first, then sorted others
-    local final_list=""
+
+    # Build final list: current session first (non-selectable header-line),
+    # then previous session (default selection), then sorted others
+    local final_list="$current_session"
     if [ -n "$previous_session" ]; then
         local prev_name=$(echo "$previous_session" | cut -d'|' -f2)
-        final_list="$prev_name"
+        final_list="$final_list"$'\n'"$prev_name"
     fi
-    
+
     # Add sorted other sessions
     for session_line in "${sorted_others[@]}"; do
         local session_name=$(echo "$session_line" | cut -d'|' -f2)
-        if [ -n "$final_list" ]; then
-            final_list="$final_list"$'\n'"$session_name"
-        else
-            final_list="$session_name"
-        fi
+        final_list="$final_list"$'\n'"$session_name"
     done
-    
+
     echo "$final_list"
 }
 
@@ -126,11 +124,12 @@ build_session_list() {
 # 1. Previous session first (automatically selected)
 # 2. Then all other sessions sorted by recency (most recently visited first)
 TEMP_SESSIONS="/tmp/tmux_sessions_$$"
+NEW_SESSION_FILE="/tmp/tmux_new_session_$$"
 
 # Note: We need to handle sessions that have never been attached (empty last_attached timestamp)
 # Format from list-sessions is: "#{session_last_attached} #{session_name}"
 # Sessions without attachment history will have empty first field
-tmux list-sessions -F "#{session_last_attached}|#{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
+tmux list-sessions -F "#{session_last_attached}|#{@zmux_last_used}|#{session_activity}|#{session_name}" > "$TEMP_SESSIONS" 2>/dev/null
 
 FINAL_LIST=$(build_session_list "$CURRENT_SESSION" "$LAST_SESSION" "$TEMP_SESSIONS")
 
@@ -141,14 +140,14 @@ cat > "$RELOAD_SCRIPT" << 'RELOAD_EOF'
 CURRENT=$(tmux display-message -p "#S" 2>/dev/null)
 LAST=$(tmux display-message -p "#{client_last_session}" 2>/dev/null)
 TEMP=$(mktemp)
-tmux list-sessions -F "#{session_last_attached}|#{session_name}" > "$TEMP" 2>/dev/null
+tmux list-sessions -F "#{session_last_attached}|#{@zmux_last_used}|#{session_activity}|#{session_name}" > "$TEMP" 2>/dev/null
 
 PREVIOUS_SESSION=""
 OTHER_SESSIONS_ARRAY=()
 
-while IFS='|' read -r TIMESTAMP SESSION_NAME; do
+while IFS='|' read -r TIMESTAMP SAVED_ORDER ACTIVITY SESSION_NAME; do
     [ -z "$SESSION_NAME" ] && continue
-    [ -z "$TIMESTAMP" ] && TIMESTAMP="0"
+    [ -z "$TIMESTAMP" ] && TIMESTAMP="${SAVED_ORDER:-${ACTIVITY:-0}}"
     [ "$SESSION_NAME" = "$CURRENT" ] && continue
     if [ -n "$LAST" ] && [ "$SESSION_NAME" = "$LAST" ]; then
         PREVIOUS_SESSION="$TIMESTAMP|$SESSION_NAME"
@@ -160,19 +159,15 @@ done < "$TEMP"
 IFS=$'\n' SORTED_OTHERS=($(printf '%s\n' "${OTHER_SESSIONS_ARRAY[@]}" | sort -rn))
 unset IFS
 
-FINAL_LIST=""
+FINAL_LIST="$CURRENT"
 if [ -n "$PREVIOUS_SESSION" ]; then
     PREV_NAME=$(echo "$PREVIOUS_SESSION" | cut -d'|' -f2)
-    FINAL_LIST="$PREV_NAME"
+    FINAL_LIST="$FINAL_LIST"$'\n'"$PREV_NAME"
 fi
 
 for session_line in "${SORTED_OTHERS[@]}"; do
     SESSION_NAME=$(echo "$session_line" | cut -d'|' -f2)
-    if [ -n "$FINAL_LIST" ]; then
-        FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
-    else
-        FINAL_LIST="$SESSION_NAME"
-    fi
+    FINAL_LIST="$FINAL_LIST"$'\n'"$SESSION_NAME"
 done
 
 echo "$FINAL_LIST"
@@ -180,8 +175,8 @@ rm -f "$TEMP" 2>/dev/null
 RELOAD_EOF
 chmod +x "$RELOAD_SCRIPT"
 
-# If no sessions (other than current), exit
-if [ -z "$FINAL_LIST" ]; then
+# If no sessions other than current, exit (list has only the 1 header line)
+if [ "$(echo "$FINAL_LIST" | wc -l)" -le 1 ]; then
     tmux display-message "No other sessions available"
     exit 0
 fi
@@ -256,23 +251,27 @@ chmod +x "$KILL_SCRIPT"
 # Try fzf-tmux first (best option), fallback to regular fzf
 if [ -n "$FZF_TMUX_CMD" ]; then
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_TMUX_CMD" -p 70%,60% \
-        --header="Select session (Enter: switch, Ctrl+x: kill)" \
+        --header="Select session (Enter: switch, Ctrl+n: new, Ctrl+x: kill)" \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
+        --bind 'load:down' \
         --bind 'enter:accept' \
+        --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
         --bind 'ctrl-c:abort' \
         2>/dev/null)
 else
     # Fallback: use regular fzf (might not work in all contexts)
     SELECTED=$(echo "$FINAL_LIST" | "$FZF_CMD" \
-        --header="Select session (Enter: switch, Ctrl+x: kill)" \
+        --header="Select session (Enter: switch, Ctrl+n: new, Ctrl+x: kill)" \
         --height=40% \
         --reverse \
         --preview="$PREVIEW_SCRIPT {}" \
         --preview-window=right:55%:follow \
+        --bind 'load:down' \
         --bind 'enter:accept' \
+        --bind "ctrl-n:execute-silent(touch '$NEW_SESSION_FILE')+abort" \
         --bind 'ctrl-r:execute('"$RENAME_SCRIPT"' {})+abort' \
         --bind 'ctrl-x:execute-silent('"$KILL_SCRIPT"' {})+reload(sleep 0.2; '"$RELOAD_SCRIPT"')' \
         --bind 'ctrl-c:abort' \
@@ -282,8 +281,26 @@ fi
 # Clean up scripts
 rm -f "$PREVIEW_SCRIPT" "$KILL_SCRIPT" "$RELOAD_SCRIPT" "$TEMP_SESSIONS" 2>/dev/null
 
-# If user cancelled (ESC or Ctrl+C), exit
-if [ -z "$SELECTED" ]; then
+# If user pressed Ctrl+n, open a small popup to prompt for a new session name
+if [ -f "$NEW_SESSION_FILE" ]; then
+    rm -f "$NEW_SESSION_FILE"
+    CREATE_SCRIPT="/tmp/tmux_create_session_$$"
+    cat > "$CREATE_SCRIPT" << 'CREATE_EOF'
+#!/bin/bash
+read -p "New session name: " name
+if [ -n "$name" ]; then
+    tmux new-session -d -s "$name" 2>/dev/null
+    tmux switch-client -t "$name" 2>/dev/null
+fi
+CREATE_EOF
+    chmod +x "$CREATE_SCRIPT"
+    tmux display-popup -E -w 40 -h 3 "$CREATE_SCRIPT"
+    rm -f "$CREATE_SCRIPT"
+    exit 0
+fi
+
+# If user cancelled (ESC or Ctrl+C), or selected the current session, just close
+if [ -z "$SELECTED" ] || [ "$SELECTED" = "$CURRENT_SESSION" ]; then
     exit 0
 fi
 

@@ -36,7 +36,6 @@ fi
 RESURRECT_SAVE="$HOME/.tmux/plugins/tmux-resurrect/scripts/save.sh"
 
 if [ -f "$RESURRECT_SAVE" ]; then
-    # Run the save script
     "$RESURRECT_SAVE"
     echo "Session saved successfully"
 else

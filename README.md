@@ -6,429 +6,111 @@
 
 ## Features
 
-- 🎯 **Zellij-like keybindings**: Modal interface with Pane, Tab, Resize, Move, and Scroll modes
+- 🎯 **Zellij-like keybindings**: Modal interface with Pane, Tab, Resize, Move, Scroll, and Session modes
 - 🎨 **Modern status bar**: Clean, minimal design inspired by Zellij
 - 🔌 **Plugin integration**: Essential tmux plugins pre-configured
 - 📦 **Easy installation**: One-command setup script
-- 🔄 **Session management**: Automatic session save/restore
-- � **Auto-update notifications**: Checks for new releases once per day; press `Ctrl+u` to update
-- �📚 **Comprehensive docs**: Philosophy, keymaps, and differences explained
+- 🔄 **Session management**: Automatic session save/restore with program re-launch
+- 🔔 **Notifications**: `zmux notify` flashes your tab when a long command finishes or Claude Code needs your attention
+- 🔁 **Auto-update**: Checks for new releases once per day; press `Ctrl+a u` to update
 
 ## Quick Start
 
-### One-line install (recommended)
+### Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jvuori/zmux/master/get-zmux.sh | bash
 ```
 
-This downloads the latest release, verifies its checksum, and runs the installer.  
-For a fully non-interactive install (useful in scripts):
+For a non-interactive install (scripts/CI):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jvuori/zmux/master/get-zmux.sh | bash -s -- --yes
 ```
 
-### Install from source
+Or from source:
 
 ```bash
 git clone https://github.com/jvuori/zmux.git
-cd zmux
-./install.sh
+cd zmux && ./install.sh
 ```
 
-### First Run
+### First run
 
-1. Start tmux: `zmux` or `zmux start` (installed to `~/.local/bin/zmux`)
-2. Install plugins: Press `Ctrl+a`, then `i` (this uses tmux prefix for plugin installation)
-3. Reload config: Press `Ctrl+a`, then `r` (custom binding)
+1. Start tmux: `zmux` (installed to `~/.local/bin/zmux`)
+2. Install plugins: `Ctrl+a` then `i`
+3. Done — your previous sessions restore automatically on next login
+
+### Shell configuration (required)
+
+zmux captures `Ctrl+p`, `Ctrl+n`, `Ctrl+h`, and others that your shell normally intercepts. Run once after install:
+
+```bash
+./setup-shell.sh && source ~/.zshrc   # or ~/.bashrc
+```
+
+See [docs/shell-config.md](docs/shell-config.md) for details.
 
 ### The `zmux` command
 
-After installation a `zmux` command is available in `~/.local/bin/zmux`:
-
 ```
-zmux                  Open / attach to a tmux session
-zmux start            Same as above
+zmux / zmux start     Open or attach to a tmux session
 zmux version          Print the installed version
 zmux update           Check for a newer release and self-update
+zmux notify           Flash the tmux tab to signal completion
 zmux doctor           Run diagnostic checks
 zmux help             Show help
 ```
 
-### Automatic Session Restoration
-
-zmux automatically restores your tmux sessions at login using **XDG autostart**.
-
-#### How It Works
-
-The `install.sh` script sets up XDG autostart:
-
-- Creates `~/.config/autostart/zmux-daemon.desktop`
-- Runs when you **log into your graphical desktop**
-- Starts **BEFORE you open any terminal**
-- All previous sessions are restored in the background
-- When you open a terminal, your sessions appear instantly ⚡
-
-This works reliably on all Linux distributions with graphical desktop environments (GNOME, KDE, XFCE, i3, etc.).
-
-See [docs/AUTOSTART_SOLUTION.md](docs/AUTOSTART_SOLUTION.md) for implementation details.
-
-To verify the setup:
-
-```bash
-./verify-autostart.sh
-```
-
-#### Manual Session Restoration
-
-You can also manually restore sessions using the script:
-
-**Option 1: Use the script directly**
-
-```bash
-~/.config/tmux/scripts/tmux-start.sh
-```
-
-**Option 2: Create an alias (recommended)**
-Add to your `~/.bashrc` or `~/.zshrc`:
-
-```bash
-alias tmux='~/.config/tmux/scripts/tmux-start.sh'
-```
-
-**Option 3: WezTerm Configuration**
-If using WezTerm, the default config already uses this script:
-
-```lua
-default_prog = { '/bin/bash', '-c', 'exec ~/.config/tmux/scripts/tmux-start.sh' }
-```
-
-### Fix Existing Installation
-
-If you have an old tmux configuration and the install script didn't update it:
-
-```bash
-./fix-installation.sh
-```
-
-This will backup your old config and create a symlink to zmux.
-
-### Update Installation
-
-To update an existing zmux installation with the latest configuration:
-
-```bash
-./update.sh
-```
-
-This will:
-
-- Backup your current configuration
-- Update all configuration files
-- Reload the config in active tmux sessions
-- Guide you through plugin updates
-
-### Reload Configuration
-
-After installing or updating zmux, reload the configuration in active tmux sessions:
-
-```bash
-./reload-config.sh
-```
-
-Or manually in tmux: press prefix, then type `:source-file ~/.tmux.conf`
-
-### Shell Configuration (Required!)
-
-zmux uses `Ctrl+p`, `Ctrl+n`, `Ctrl+h`, and `Ctrl+a` which conflict with shell readline shortcuts. You **must** configure your shell:
-
-```bash
-./setup-shell.sh
-```
-
-This will automatically add the necessary configuration to your `~/.bashrc` or `~/.zshrc`.
-
-After running, reload your shell:
-
-```bash
-source ~/.bashrc  # or source ~/.zshrc
-```
-
-**Important:** Without this step, the keybindings won't work because your shell will intercept them before tmux can handle them.
-
-See [docs/shell-config.md](docs/shell-config.md) for manual setup or more details.
-
-### Verify Installation
-
-```bash
-~/.config/tmux/scripts/doctor.sh
-```
-
 ## Key Bindings
 
-zmux uses Zellij's default keybindings - direct key combinations (no prefix needed):
+zmux uses Zellij's modal keybindings — no prefix needed for mode entry:
 
-### Lock Mode
+| Key | Mode |
+|-----|------|
+| `Ctrl+p` | **Pane** — split, navigate, close panes |
+| `Ctrl+t` | **Tab** — create, switch, rename windows |
+| `Ctrl+n` | **Resize** — resize panes with arrow keys |
+| `Ctrl+h` | **Move** — reorder panes |
+| `Ctrl+s` | **Scroll** — enter copy/scroll mode |
+| `Ctrl+o` | **Session** — switch sessions, create, detach |
+| `Ctrl+g` | **Git** — fzf branch picker, commit picker, lazygit |
+| `Ctrl+l` | **Lock** — pass all keys directly to the application |
 
-- **Lock/Unlock**: `Ctrl+l` - Toggles lock mode
+### Quick actions (no mode needed)
 
-When lock mode is enabled:
-
-- ✅ **All keyboard input goes directly to the application** (like Ctrl+p for fzf, Ctrl+s for vim search, etc.)
-- ✅ **Visual indicator** shows 🔒 LOCK in the status bar
-- ✅ **Only Ctrl+l works** to toggle lock mode off and restore tmux keybindings
-- ✅ **Perfect for applications** that need Ctrl+\* keybindings (fzf, vim, lazygit, neovim with telescope, etc.)
-
-This is zmux's implementation of Zellij's "Lock mode" and solves the problem where tmux consumes keybindings needed by applications.
-
-### Git Operations
-
-- **Git branch**: `Ctrl+g, b` - Insert branch name into command line (requires fzf)
-
-Example workflow:
-
-```bash
-$ git checkout [Ctrl+g, b]
-> [fzf opens with branches]
-> Type to filter: "feature"
-> [Press Enter to insert branch name]
-$ git checkout feature/new-api [cursor here]
-```
-
-### Modes
-
-- **Pane mode**: `Ctrl+p` - Manage panes (split, close, navigate)
-- **Resize mode**: `Ctrl+n` - Resize panes with arrow keys
-- **Move mode**: `Ctrl+h` - Move/reorder panes
-- **Tab mode**: `Ctrl+t` - Manage tabs/windows
-- **Scroll mode**: `Ctrl+s` - Scroll and copy mode
-- **Session mode**: `Ctrl+o` - Session management (create, switch, detach)
-
-### Quick Actions
-
-- **Quit**: `Ctrl+q` - Kill all sessions
-- **Reload config**: `Ctrl+a r` (custom, not in Zellij)
-- **Session switcher**: `Ctrl+a s` (custom, not in Zellij)
+| Key | Action |
+|-----|--------|
+| `Ctrl+q` | Detach from client (keeps daemon running) |
+| `Ctrl+a r` | Reload config |
+| `Ctrl+a u` | Update zmux |
+| `Ctrl+o w` | Interactive session switcher (fzf) |
 
 See [docs/keymap.md](docs/keymap.md) for the complete keymap reference.
 
-## Project Structure
-
-```
-zmux/
-├── README.md
-├── install.sh              # Installation script
-├── uninstall.sh            # Uninstallation script
-├── tmux/                   # tmux configuration files
-│   ├── tmux.conf          # Main configuration
-│   ├── keybindings.conf   # Keybindings
-│   ├── statusbar.conf     # Status bar config
-│   ├── sessions.conf      # Session management
-│   └── modes/             # Mode-specific configs
-│       ├── pane.conf
-│       ├── tab.conf
-│       ├── resize.conf
-│       └── move.conf
-├── plugins/
-│   └── plugins.conf       # Plugin configuration
-├── scripts/
-│   ├── session-switcher.sh # Interactive session switcher
-│   └── doctor.sh          # Installation checker
-└── docs/
-    ├── philosophy.md      # Design philosophy
-    ├── keymap.md          # Complete keymap reference
-    └── differences-vs-zellij.md # Comparison with Zellij
-```
-
-## Configuration
-
-Configuration files are installed to `~/.config/tmux/`. The main config file is `tmux.conf`, which sources all other configuration files.
-
-### Customization
-
-You can customize zmux by editing files in `~/.config/tmux/`:
-
-- `keybindings.conf` - Change keybindings
-- `statusbar.conf` - Customize status bar appearance
-- `sessions.conf` - Session management settings
-- `modes/*.conf` - Mode-specific configurations
-
-After making changes, reload the config with `Ctrl+a r`.
-
-## Plugins
-
-zmux includes the following plugins (installed via TPM):
-
-### Core & Session Experience
-
-- **tmux-sensible** - Sensible defaults
-- **tmux-resurrect** - Save/restore sessions (prefix + Ctrl+s save, prefix + Ctrl+r restore)
-- **tmux-continuum** - Auto-save sessions (autosave every 15 minutes, auto-restore on start)
-
-### Discoverability & UX Guidance
-
-- **tmux-which-key** - Keybinding hints (shows available keys after prefix)
-- **tmux-prefix-highlight** - Prefix indicator (shows in status bar when prefix is active)
-
-### Sessions, Windows & Navigation
-
-- **tmux-fzf** - Interactive session/window/pane switcher (fzf-based UI)
-
-### Additional Useful Plugins
-
-- **tmux-yank** - Better clipboard integration
-- **tmux-open** - Open files/URLs
-- **tmux-copycat** - Enhanced search
-- **tmux-pain-control** - Better pane navigation
-
-### Installing Plugins
-
-After installation or update, install plugins:
-
-**In tmux:**
-
-- Press `Ctrl+a`, then `i` to install all plugins
-- Press `Ctrl+a`, then `u` to update existing plugins
-
-**From command line:**
-
-```bash
-tmux run '~/.tmux/plugins/tpm/bin/install_plugins'
-tmux run '~/.tmux/plugins/tpm/bin/update_plugins' all
-```
-
-**Note:** After running `update.sh`, you need to install any new plugins that were added to the configuration.
-
-## Uninstallation
-
-```bash
-./uninstall.sh
-```
-
-This will:
-
-- Remove configuration files
-- Remove the symlink to `~/.tmux.conf`
-- Optionally remove plugins and tmux itself
-
 ## Documentation
 
-- [Philosophy](docs/philosophy.md) - Design principles and goals
-- [Keymap Reference](docs/keymap.md) - Complete keybinding guide
-- [Differences vs Zellij](docs/differences-vs-zellij.md) - What's different and why
+- [Keymap Reference](docs/keymap.md) — Complete keybinding guide
+- [Session Restore](docs/session-restore.md) — Autostart, program re-launch, manual save/restore
+- [Shell Configuration](docs/shell-config.md) — Fixing shell key conflicts
+- [Lock Mode](docs/lock-mode.md) — Pass-through mode for applications that need Ctrl+\*
+- [Git Operations](docs/git-operations.md) — fzf branch/commit picker and lazygit integration
+- [zmux notify](docs/notify.md) — Tab flash notifications for commands and Claude Code
+- [Auto-Update](docs/auto-update.md) — How update checks and self-update work
+- [Plugins](docs/plugins.md) — Plugin list and TPM management
+- [Differences vs Zellij](docs/differences-vs-zellij.md) — What's different and why
+- [Philosophy](docs/philosophy.md) — Design principles and goals
+- [Troubleshooting](docs/troubleshooting.md) — Common issues and fixes
 
 ## Requirements
 
-### Required
+**Required:** tmux 3.0+, git, bash
 
-- **tmux** 3.0+ (minimum 2.0+, but 3.0+ recommended for all features)
-  - The install script will attempt to install this if missing
-  - On Debian/Ubuntu: `sudo apt-get install tmux`
-  - On macOS: `brew install tmux`
-- **git** - Required for cloning TPM (Tmux Plugin Manager) and plugin installation
-  - The install script will fail without this
-  - On Debian/Ubuntu: `sudo apt-get install git`
-  - On macOS: `brew install git`
-- **bash** - Required for install and plugin scripts
-  - Comes pre-installed on most systems
-
-### Optional (Highly Recommended)
-
-- **fzf** (0.67.0+) - For interactive features and git operations
-  - Git mode requires this for branch/commit selection
-  - Enables tmux-fzf plugin for enhanced session switching
-  - On Debian/Ubuntu: `sudo apt-get install fzf`
-  - On macOS: `brew install fzf`
-  - Without it: Git operations will fail, but core tmux functionality still works
-
-## Troubleshooting
-
-### Keybindings not working (Ctrl+p shows previous command, etc.)
-
-This happens when your shell intercepts the keys before tmux can handle them.
-
-**Solution:**
-
-1. Run the shell setup script:
-
-   ```bash
-   ./setup-shell.sh
-   ```
-
-2. Reload your shell config:
-
-   ```bash
-   source ~/.bashrc  # or source ~/.zshrc
-   ```
-
-3. Reload tmux config (in tmux, press current prefix, then):
-
-   ```
-   :source-file ~/.tmux.conf
-   ```
-
-4. Test: `Ctrl+p` should enter pane mode (not show previous command)
-
-See [docs/shell-config.md](docs/shell-config.md) for more details.
-
-### Installation had no effect / Old config still active
-
-If you ran `install.sh` but your old tmux configuration is still active:
-
-1. **Check if files were copied:**
-
-   ```bash
-   ls -la ~/.config/tmux/
-   ```
-
-2. **Fix the symlink:**
-
-   ```bash
-   ./fix-installation.sh
-   ```
-
-3. **Reload tmux config in existing sessions:**
-   - Press your current prefix (usually `Ctrl+b`)
-   - Type: `:source-file ~/.tmux.conf`
-   - Press Enter
-
-   Or restart tmux:
-
-   ```bash
-   exit  # exit current session
-   tmux  # start new session
-   ```
-
-4. **Verify it's working:**
-   - Press `Ctrl+p` (should enter pane mode)
-   - Press `Ctrl+n` (should enter resize mode)
-   - Check prefix: `tmux show-options -g prefix` (should show `C-a`)
-
-### Plugins not installing
-
-1. Make sure TPM is installed: `ls ~/.tmux/plugins/tpm`
-2. If missing, run: `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
-3. In tmux, press `Ctrl+a`, then `i`
-
-### Keybindings not working
-
-1. Check if config is loaded: `tmux show-options -g | grep prefix`
-2. Reload config: `Ctrl+a r`
-3. Verify installation: `~/.config/tmux/scripts/doctor.sh`
-
-### Status bar not showing
-
-1. Check status bar is enabled: `tmux show-options -g status`
-2. Reload config: `Ctrl+a r`
+**Optional (recommended):** fzf — needed for the session switcher and git operations
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
-
-- **Repository**: [https://github.com/jvuori/zmux](https://github.com/jvuori/zmux)
-- **Issues**: [https://github.com/jvuori/zmux/issues](https://github.com/jvuori/zmux/issues)
-- **Pull Requests**: [https://github.com/jvuori/zmux/pulls](https://github.com/jvuori/zmux/pulls)
+Issues and pull requests welcome at [github.com/jvuori/zmux](https://github.com/jvuori/zmux).
 
 ## License
 
@@ -436,13 +118,6 @@ This project is open source. See LICENSE file for details.
 
 ## Acknowledgments
 
-- [Zellij](https://zellij.dev/) - For the excellent UX that inspired this project
-- [tmux](https://github.com/tmux/tmux) - The powerful terminal multiplexer
-- [TPM](https://github.com/tmux-plugins/tpm) - Tmux Plugin Manager
-- All the tmux plugin developers
-
-## Related Projects
-
-- [Zellij](https://zellij.dev/) - The original terminal workspace
-- [tmux](https://github.com/tmux/tmux) - Terminal multiplexer
-- [TPM](https://github.com/tmux-plugins/tpm) - Tmux Plugin Manager
+- [Zellij](https://zellij.dev/) — For the excellent UX that inspired this project
+- [tmux](https://github.com/tmux/tmux) — The powerful terminal multiplexer
+- [TPM](https://github.com/tmux-plugins/tpm) — Tmux Plugin Manager

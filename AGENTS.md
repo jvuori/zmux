@@ -72,6 +72,36 @@ When writing documentation or examples:
 
 **Action**: Make all changes within this project directory, then run `./update.sh` to apply them to `~/.config` and verify the desired behavior.
 
+## Pane Program Save/Restore Architecture
+
+Program state is read directly from the **tmux-resurrect save file** — no separate save step needed.
+
+tmux-resurrect already captures the full command for each pane (via `/proc/<pid>/cmdline`, the same technique as `linux_procfs.sh` strategy). tmux-continuum auto-saves this file every ~15 minutes. A systemd user service (`tmux-shutdown-save.service`) runs a final resurrect save at logout/shutdown to capture any state from the last auto-save cycle.
+
+- **`scripts/restore-pane-apps.sh`** — runs on `client-attached` and after Ctrl+a Ctrl+r. Parses the resurrect `last` symlink for pane program data and re-launches each pane's program. Skips panes already running a non-shell (prevents double-restore on re-attach).
+
+The resurrect file format (tab-separated, 11 fields per `pane` line):
+```
+pane | session | window | win_active | win_flags | pane_idx | pane_title | :dir | pane_active | cmd | :full_cmd
+```
+`restore-pane-apps.sh` uses field 10 (`cmd`) and field 11 (`:full_cmd`, strip the leading colon).
+
+### Restore logic per tool type
+
+**Generic programs**: re-launched with the full saved command as-is (`vim notes.txt`, `htop`, `lazygit`, etc.).
+
+**Shells** (`bash`, `zsh`, etc.): skipped — pane is already at a prompt.
+
+**Blocklisted** (`dd`, `mkfs`, `fdisk`, `apt`, etc.): never auto-restarted.
+
+**Claude Code**: add `--continue` unless the command already contains a session flag (`--continue`, `--resume`, `--session-id`, `--from-pr`). Strip one-time flags that must not replay: `--fork-session` (would fork again) and `--worktree`/`-w` (would create another worktree). Skip non-interactive modes (`--print`/`-p`, `--bg`).
+
+**Cursor Agent / Copilot**: use the saved command as-is. Their session UUIDs live in the tool's own state and survive reboots, so `--resume=UUID` remains valid.
+
+### Adding a new tool with special restore logic
+
+Add a `case` entry in `restore-pane-apps.sh` matching the tool's `pane_current_command` value (the process basename). No save-side changes needed — the resurrect file captures all programs generically.
+
 ## Key Binding Architecture: tmux vs ZLE
 
 When adding a new Ctrl+key binding that works both inside and outside tmux, there are **two separate layers** that must be kept consistent:

@@ -24,8 +24,8 @@ if [ -f "$DEBUG_FILE" ]; then
     echo "=== $(date '+%Y-%m-%d %H:%M:%S') Starting zmux daemon ===" 
 fi
 
-# Ensure required directories exist
-mkdir -p ~/.tmux/resurrect
+# Ensure required directories exist (must match @resurrect-dir in plugins.conf)
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
 mkdir -p ~/.config/tmux/scripts
 
 # Wait for systemd user session to be ready before calling systemctl --user

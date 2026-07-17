@@ -39,6 +39,9 @@ restore_pane_apps() {
         [ -z "$pane" ] || [ -z "$program" ] && continue
         [ -z "$full_cmd" ] && full_cmd="$program"
 
+        # Skip if program is numeric (corrupted resurrect data - likely a PID instead of command)
+        [[ "$program" =~ ^[0-9]+$ ]] && continue
+
         # Skip panes that are already running a non-shell program.
         # This prevents double-restore on re-attach without a full tmux restart.
         local current=$(tmux display-message -t "$pane" -p "#{pane_current_command}" 2>/dev/null)

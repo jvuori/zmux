@@ -29,7 +29,7 @@ if ! grep -Eq "^set-hook[[:space:]]+-ag[[:space:]]+client-attached[[:space:]]+'r
 	exit 1
 fi
 
-if ! grep -Eq "^set-hook[[:space:]]+-ag[[:space:]]+client-attached[[:space:]]+'run-shell -b \"sleep 3 && ~/.config/tmux/scripts/restore-pane-apps.sh\"'[[:space:]]*$" "$SESSIONS_CONF"; then
+if ! grep -Eq "^set-hook[[:space:]]+-ag[[:space:]]+client-attached[[:space:]]+'run-shell -b \"sleep 0.5 && ~/.config/tmux/scripts/restore-pane-apps.sh\"'[[:space:]]*$" "$SESSIONS_CONF"; then
 	echo "ERROR: sessions.conf must append restore-pane-apps.sh on client-attached"
 	grep -nE "client-attached|restore-pane-apps\\.sh" "$SESSIONS_CONF" || true
 	exit 1

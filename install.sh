@@ -583,6 +583,39 @@ echo "   • Before system shutdown/reboot"
 echo "   • When you press Ctrl+q (quit tmux)"
 
 # ============================================================================
+# Step 7.6: Setup systemd restore pane apps service
+# ============================================================================
+
+echo ""
+echo "🔄 Setting up pane app restoration on daemon startup..."
+
+# Create systemd restore-pane-apps service
+cat > "$HOME/.config/systemd/user/tmux-restore-pane-apps.service" << 'SERVICE_FILE'
+[Unit]
+Description=Restore pane applications after tmux daemon starts
+After=tmux-spawn-daemon.service
+PartOf=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'sleep 1 && ~/.config/tmux/scripts/restore-pane-apps.sh'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
+SERVICE_FILE
+
+# Enable the service
+if command -v systemctl >/dev/null 2>&1; then
+	systemctl --user daemon-reload 2>/dev/null || true
+	systemctl --user enable tmux-restore-pane-apps.service 2>/dev/null && \
+		echo "✅ Restore pane apps service enabled" || \
+		echo "⚠️  Could not enable restore pane apps service"
+else
+	echo "⚠️  systemctl not available, skipping service setup"
+fi
+
+# ============================================================================
 # Step 8: Shell Configuration (Important!)
 # ============================================================================
 

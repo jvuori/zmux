@@ -331,6 +331,30 @@ echo "   • Every 5 minutes (auto-save)"
 echo "   • Before system shutdown/reboot"
 echo "   • When you press Ctrl+q (quit tmux)"
 
+# Create systemd restore-pane-apps service
+echo ""
+echo "🔄 Setting up pane app restoration on daemon startup..."
+
+cat > "$HOME/.config/systemd/user/tmux-restore-pane-apps.service" << 'SERVICE_FILE'
+[Unit]
+Description=Restore pane applications after tmux daemon starts
+After=tmux-spawn-daemon.service
+PartOf=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'sleep 1 && ~/.config/tmux/scripts/restore-pane-apps.sh'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
+SERVICE_FILE
+
+systemctl --user daemon-reload 2>/dev/null || true
+systemctl --user enable tmux-restore-pane-apps.service 2>/dev/null && \
+    echo "✅ Restore pane apps service enabled" || \
+    echo "⚠️  Could not enable restore pane apps service"
+
 # ============================================================================
 # Step 5: Update plugins
 # ============================================================================

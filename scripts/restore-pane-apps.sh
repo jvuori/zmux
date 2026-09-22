@@ -7,6 +7,7 @@
 
 RESURRECT_LAST="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/last"
 ORDER_FILE="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect/session-order.txt"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/zmux-restore-pane-apps.lock"
 
 # Resurrect file format (tab-separated, 11 fields):
 #   pane | session | window | win_active | win_flags | pane_idx | pane_title | :dir | pane_active | cmd | :full_cmd
@@ -35,12 +36,26 @@ restore_pane_apps() {
     data=$(_read_resurrect_file) || return 0
     [ -z "$data" ] && return 0
 
+    # Identifies this resurrect save. Combined with the per-pane marker below,
+    # ensures a pane's restore command is sent at most once per snapshot even
+    # if multiple client-attached events fire concurrently (e.g. several
+    # terminal windows attaching around the same time).
+    local snapshot
+    snapshot=$(stat -c %Y "$RESURRECT_LAST" 2>/dev/null || stat -f %m "$RESURRECT_LAST" 2>/dev/null)
+
     while IFS='|' read -r pane program full_cmd; do
         [ -z "$pane" ] || [ -z "$program" ] && continue
         [ -z "$full_cmd" ] && full_cmd="$program"
 
         # Skip if program is numeric (corrupted resurrect data - likely a PID instead of command)
         [[ "$program" =~ ^[0-9]+$ ]] && continue
+
+        # Skip panes already marked as restored for this snapshot.
+        if [ -n "$snapshot" ]; then
+            local marked
+            marked=$(tmux show-option -pqv -t "$pane" @zmux_restored_snapshot 2>/dev/null)
+            [ "$marked" = "$snapshot" ] && continue
+        fi
 
         # Skip panes that are already running a non-shell program.
         # This prevents double-restore on re-attach without a full tmux restart.
@@ -49,6 +64,8 @@ restore_pane_apps() {
             bash|zsh|sh|fish|ksh|dash|csh|tcsh) ;;  # at shell prompt, proceed
             *) continue ;;                            # already running something, skip
         esac
+
+        [ -n "$snapshot" ] && tmux set-option -pq -t "$pane" @zmux_restored_snapshot "$snapshot" 2>/dev/null
 
         case "$program" in
             claude)
@@ -96,6 +113,13 @@ restore_pane_apps() {
         esac
     done <<< "$data"
 }
+
+# Serialize invocations: multiple client-attached events (e.g. several terminal
+# windows attaching around the same time) must not run this concurrently, or
+# two instances can each catch a pane still at its shell prompt and both send
+# a restore command — the second lands inside the app the first just launched.
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
 
 # Wait for processes to start and output to appear after restore
 sleep 2
